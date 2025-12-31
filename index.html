@@ -1,90 +1,617 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Overlay Video Immobiliare</title>
-<style>
-body {
-  margin: 0;
-  background: #000;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
-  color: #fff;
-}
-
-/* TESTO ORIZZONTALE SCORREVOLE */
-#ticker {
-  position: absolute;
-  top: 10%;
-  width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  font-size: 28px;
-}
-#ticker span {
-  display: inline-block;
-  padding-left: 100%;
-  animation: scroll 15s linear infinite;
-}
-@keyframes scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
-}
-
-/* COLONNA SINISTRA */
-#actions {
-  position: absolute;
-  left: 15px;
-  top: 35%;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  font-size: 18px;
-}
-.action {
-  cursor: pointer;
-  animation: pulse 2s infinite;
-}
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-
-/* TELEFONO IN BASSO */
-#phone {
-  position: absolute;
-  bottom: 20px;
-  width: 100%;
-  text-align: center;
-  font-size: 22px;
-  font-weight: bold;
-}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Video Creator – Teleprompter Professionale</title>
+  <meta name="description" content="Crea video immobiliari professionali con teleprompter integrato per TikTok, Instagram, Reels e Shorts">
+  <meta name="keywords" content="video creator, teleprompter, immobiliare, social media, content creation">
+  
+  <style>
+    /* ===== VARIABLES ===== */
+    :root {
+      --bg: #0b1120;
+      --bg-secondary: #0f172a;
+      --text: #f3f4f6;
+      --text-secondary: #a0adb8;
+      --primary: #d8a23a;
+      --primary-light: rgba(216, 162, 58, 0.15);
+      --danger: #ff2d2d;
+      --danger-light: rgba(255, 45, 45, 0.15);
+      --success: #4a8f72;
+      --info: #395a8c;
+      --warning: #d8a23a;
+      --border: rgba(225, 225, 225, 0.18);
+      --border-light: rgba(255, 255, 255, 0.08);
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 12px;
+      --spacing-lg: 16px;
+      --spacing-xl: 24px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --radius-xl: 24px;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.25);
+      --shadow-md: 0 10px 30px rgba(0, 0, 0, 0.35);
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.45);
+      --font-sans: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --tele-font: 12px;
+      --tele-line: 1.22;
+      --stage-w: min(420px, 92vw);
+      --zoom: 1;
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s ease;
+      --transition-slow: 0.35s ease;
+    }
+    
+    /* ===== RESET & BASE ===== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: var(--font-sans);
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(216, 162, 58, .18), transparent 60%),
+        radial-gradient(900px 600px at 85% 30%, rgba(123, 79, 189, .14), transparent 55%),
+        radial-gradient(900px 600px at 70% 85%, rgba(74, 143, 114, .14), transparent 55%),
+        var(--bg);
+      line-height: 1.5;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-md);
+    }
+    
+    /* ===== MAIN CONTAINER ===== */
+    .container {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+    }
+    
+    /* ===== TITLE ===== */
+    .title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: var(--spacing-lg);
+    }
+    
+    /* ===== PROPERTY FORM ===== */
+    .property-form {
+      background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .02));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: var(--spacing-md);
+    }
+    
+    .form-title {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 950;
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-sm);
+    }
+    
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .form-field label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    
+    .form-field input,
+    .form-field select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      background: rgba(0, 0, 0, .18);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      transition: all var(--transition-normal);
+      outline: none;
+    }
+    
+    .form-field input:focus,
+    .form-field select:focus {
+      border-color: rgba(216, 162, 58, .45);
+      box-shadow: 0 0 0 3px rgba(216, 162, 58, .12);
+    }
+    
+    /* ===== ANSWER BOX ===== */
+    .answer-box {
+      background: linear-gradient(180deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .02));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      padding: var(--spacing-md);
+    }
+    
+    .answer-title {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      font-weight: 950;
+      margin-bottom: var(--spacing-md);
+    }
+    
+    .answer-textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-light);
+      background: rgba(0, 0, 0, .18);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      transition: all var(--transition-normal);
+      outline: none;
+      resize: vertical;
+      line-height: 1.4;
+    }
+    
+    .answer-textarea:focus {
+      border-color: rgba(216, 162, 58, .45);
+      box-shadow: 0 0 0 3px rgba(216, 162, 58, .12);
+    }
+    
+    /* ===== DISPLAY AREA ===== */
+    .display-area {
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      background: #000;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(255, 255, 255, .12);
+      overflow: hidden;
+      position: relative;
+      margin-top: var(--spacing-md);
+    }
+    
+    .scrolling-text {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 80px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-md);
+    }
+    
+    .text-content {
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      text-align: center;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      width: 100%;
+      transform: translateY(100%);
+      animation: scrollUp 30s linear infinite;
+    }
+    
+    @keyframes scrollUp {
+      0% {
+        transform: translateY(100%);
+      }
+      100% {
+        transform: translateY(-100%);
+      }
+    }
+    
+    /* ===== SIDE BUTTONS ===== */
+    .side-buttons {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-md);
+      z-index: 10;
+    }
+    
+    .side-button {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      width: 70px;
+      text-align: center;
+      backdrop-filter: blur(4px);
+    }
+    
+    .side-button:hover {
+      background: rgba(216, 162, 58, 0.3);
+      transform: scale(1.05);
+    }
+    
+    .side-button .icon {
+      font-size: 20px;
+    }
+    
+    /* ===== PHONE NUMBER ===== */
+    .phone-number {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.8);
+      color: var(--primary);
+      font-size: 18px;
+      font-weight: 700;
+      text-align: center;
+      padding: 12px;
+      border-top: 2px solid var(--primary);
+      backdrop-filter: blur(4px);
+    }
+    
+    /* ===== BUTTONS ===== */
+    .action-buttons {
+      display: flex;
+      gap: var(--spacing-sm);
+      margin-top: var(--spacing-md);
+    }
+    
+    .btn {
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, .04);
+      color: var(--text);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 12px;
+      line-height: 1;
+      white-space: nowrap;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-sm);
+      user-select: none;
+      transition: all var(--transition-normal);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      flex: 1;
+      text-align: center;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(216, 162, 58, .22);
+      box-shadow: var(--shadow-md);
+      filter: brightness(1.1);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(216, 162, 58, .95), rgba(216, 162, 58, .72));
+      color: #111;
+      border-color: rgba(216, 162, 58, .55);
+    }
+    
+    .btn-secondary {
+      background: linear-gradient(135deg, rgba(57, 90, 140, .95), rgba(57, 90, 140, .70));
+      border-color: rgba(57, 90, 140, .55);
+    }
+  </style>
 </head>
 
 <body>
+  <div class="container">
+    <h1 class="title">Inserisci i dati degli immobili</h1>
+    
+    <div class="property-form">
+      <div class="form-title">Dati Immobile</div>
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="f_displayName">Nome visualizzato</label>
+          <input id="f_displayName" placeholder="Es: Trilocale Luminoso">
+        </div>
+        <div class="form-field">
+          <label for="f_mq">Metri Quadri</label>
+          <input id="f_mq" type="number" placeholder="mq">
+        </div>
+        
+        <div class="form-field">
+          <label for="f_piano">Piano</label>
+          <input id="f_piano" placeholder="Es: 2° piano">
+        </div>
+        <div class="form-field">
+          <label for="f_locali">Locali</label>
+          <input id="f_locali" placeholder="Es: 3 locali">
+        </div>
+        
+        <div class="form-field">
+          <label for="f_bagno">Bagno/i</label>
+          <input id="f_bagno" placeholder="Es: 1 bagno">
+        </div>
+        <div class="form-field">
+          <label for="f_riscaldamento">Riscaldamento</label>
+          <select id="f_riscaldamento">
+            <option value="">Seleziona</option>
+            <option value="autonomo">Autonomo</option>
+            <option value="centralizzato">Centralizzato</option>
+          </select>
+        </div>
+        
+        <div class="form-field">
+          <label for="f_giardino">Giardino</label>
+          <select id="f_giardino">
+            <option value="">Seleziona</option>
+            <option value="si">Sì</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="f_garage">Garage/Box</label>
+          <select id="f_garage">
+            <option value="">Seleziona</option>
+            <option value="si">Sì</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        
+        <div class="form-field">
+          <label for="f_arredamento">Arredamento</label>
+          <select id="f_arredamento">
+            <option value="">Seleziona</option>
+            <option value="arredato">Arredato</option>
+            <option value="parziale">Parzialmente</option>
+            <option value="non">Non arredato</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="f_ascensore">Ascensore</label>
+          <select id="f_ascensore">
+            <option value="">Seleziona</option>
+            <option value="si">Sì</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    
+    <div class="answer-box">
+      <div class="answer-title">Risposta ChatGPT</div>
+      <textarea id="answerBox" class="answer-textarea" placeholder="Incolla qui la risposta da ChatGPT..."></textarea>
+      <div class="action-buttons">
+        <button class="btn btn-primary" id="btnSendToChatGPT">Invia a ChatGPT</button>
+        <button class="btn btn-secondary" id="btnPasteResponse">Incolla Risposta</button>
+      </div>
+    </div>
+    
+    <div class="display-area">
+      <div class="scrolling-text">
+        <div class="text-content" id="scrollingText">
+          La descrizione generata apparirà qui...
+        </div>
+      </div>
+      
+      <div class="side-buttons">
+        <div class="side-button" id="btnLike">
+          <div class="icon">👍</div>
+          <div>Metti like</div>
+        </div>
+        <div class="side-button" id="btnShare">
+          <div class="icon">🔄</div>
+          <div>Condividi</div>
+        </div>
+        <div class="side-button" id="btnDM">
+          <div class="icon">💬</div>
+          <div>Scrivimi in DM</div>
+        </div>
+        <div class="side-button" id="btnCall">
+          <div class="icon">📞</div>
+          <div>Chiama</div>
+        </div>
+      </div>
+      
+      <div class="phone-number" id="phoneNumber">📞 +39 123 456 7890</div>
+    </div>
+  </div>
 
-<!-- TESTO SCORREVOLE (RISPOSTA CHATGPT) -->
-<div id="ticker">
-  <span>
-    INCOLLA QUI LA RISPOSTA DI CHATGPT – DESCRIZIONE IMMOBILE GENERATA AUTOMATICAMENTE
-  </span>
-</div>
+  <script>
+    // Configurazione
+    const CONFIG = {
+      CHATGPT_URL: 'https://chatgpt.com/c/69528e47-0920-8331-8d43-59824e8a9c54',
+      PHONE_NUMBER: '+39 123 456 7890'
+    };
 
-<!-- AZIONI LATO SINISTRO -->
-<div id="actions">
-  <div class="action">❤️ Metti like</div>
-  <div class="action">🔁 Condividi</div>
-  <div class="action">💬 Scrivimi in DM</div>
-  <div class="action">📞 Chiama: 333 1234567</div>
-</div>
+    // Funzioni utility
+    function $(id) {
+      return document.getElementById(id);
+    }
 
-<!-- TELEFONO FONDO -->
-<div id="phone">
-  Contatti rapidi: 333 1234567
-</div>
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (e) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        return true;
+      }
+    }
 
+    async function readClipboardText() {
+      try {
+        return await navigator.clipboard.readText();
+      } catch (error) {
+        return '';
+      }
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.textContent = message;
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        background: ${type === 'success' ? '#4a8f72' : '#395a8c'};
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+      `;
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Ottenere dati immobile
+    function getPropertyData() {
+      return {
+        nome: $('f_displayName').value,
+        mq: $('f_mq').value,
+        piano: $('f_piano').value,
+        locali: $('f_locali').value,
+        bagno: $('f_bagno').value,
+        riscaldamento: $('f_riscaldamento').value,
+        giardino: $('f_giardino').value,
+        garage: $('f_garage').value,
+        arredamento: $('f_arredamento').value,
+        ascensore: $('f_ascensore').value
+      };
+    }
+
+    // Costruire prompt per ChatGPT
+    function buildChatGPTPrompt() {
+      const data = getPropertyData();
+      const prompt = `Genera una descrizione accattivante per questo immobile:
+      
+      - Nome: ${data.nome || 'Non specificato'}
+      - Metri quadri: ${data.mq || 'Non specificato'}
+      - Piano: ${data.piano || 'Non specificato'}
+      - Locali: ${data.locali || 'Non specificato'}
+      - Bagno/i: ${data.bagno || 'Non specificato'}
+      - Riscaldamento: ${data.riscaldamento || 'Non specificato'}
+      - Giardino: ${data.giardino || 'Non specificato'}
+      - Garage/Box: ${data.garage || 'Non specificato'}
+      - Arredamento: ${data.arredamento || 'Non specificato'}
+      - Ascensore: ${data.ascensore || 'Non specificato'}
+      
+      Scrivi una descrizione breve, coinvolgente e adatta per video social (max 150 parole).`;
+      
+      return prompt;
+    }
+
+    // Invia a ChatGPT
+    $('btnSendToChatGPT').addEventListener('click', async function() {
+      const prompt = buildChatGPTPrompt();
+      const ok = await copyText(prompt);
+      if (ok) {
+        window.open(CONFIG.CHATGPT_URL, '_blank');
+        showNotification('Prompt copiato! Apri ChatGPT e incolla.', 'success');
+      }
+    });
+
+    // Incolla risposta
+    $('btnPasteResponse').addEventListener('click', async function() {
+      const text = await readClipboardText();
+      if (text.trim()) {
+        $('answerBox').value = text;
+        $('scrollingText').textContent = text;
+        showNotification('Risposta incollata e visualizzata!', 'success');
+      } else {
+        showNotification('Nessun testo negli appunti.', 'info');
+      }
+    });
+
+    // Animazione testo scorrevole
+    function startScrolling() {
+      const textElement = $('scrollingText');
+      const text = textElement.textContent;
+      if (text.length > 100) {
+        textElement.style.animationDuration = '30s';
+        textElement.style.animationPlayState = 'running';
+      }
+    }
+
+    // Imposta numero di telefono
+    $('phoneNumber').textContent = `📞 ${CONFIG.PHONE_NUMBER}`;
+
+    // Funzioni bottoni laterali
+    $('btnLike').addEventListener('click', () => {
+      $('btnLike').style.background = 'rgba(216, 162, 58, 0.5)';
+      setTimeout(() => {
+        $('btnLike').style.background = '';
+      }, 300);
+    });
+
+    $('btnShare').addEventListener('click', () => {
+      showNotification('Condivisione simulata!', 'info');
+    });
+
+    $('btnDM').addEventListener('click', () => {
+      showNotification('Apri i DM per scrivere!', 'info');
+    });
+
+    $('btnCall').addEventListener('click', () => {
+      window.location.href = `tel:${CONFIG.PHONE_NUMBER}`;
+    });
+
+    // Avvia scorrimento all'avvio
+    setTimeout(startScrolling, 1000);
+  </script>
 </body>
 </html>
