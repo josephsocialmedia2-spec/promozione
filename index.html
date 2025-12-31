@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -483,61 +484,6 @@
 </head>
 
 <body>
-
-
-<!-- ================= WHATSAPP CHAT BUTTON ================= -->
-<a id="whatsappBtn" href="#" target="_blank" aria-label="Invia a Joseph su WhatsApp">
-  <span class="wa-icon">💬</span>
-  <span class="wa-text">Invia a Joseph</span>
-</a>
-
-<style>
-#whatsappBtn{
-  position: fixed;
-  bottom: 90px;
-  right: 16px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  background: linear-gradient(135deg,#25D366,#1ebe5d);
-  color: #0b1120;
-  font-weight: 900;
-  font-size: 12px;
-  border-radius: 999px;
-  text-decoration: none;
-  box-shadow: 0 14px 40px rgba(0,0,0,.35);
-  z-index: 9999;
-  transition: transform .15s ease, box-shadow .15s ease;
-}
-#whatsappBtn:hover{
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 18px 50px rgba(0,0,0,.45);
-}
-.wa-icon{
-  font-size: 18px;
-  animation: waPulse 1.4s infinite;
-}
-@keyframes waPulse{
-  0%{ transform: scale(1); }
-  60%{ transform: scale(1.15); }
-  100%{ transform: scale(1); }
-}
-</style>
-
-<script>
-const WHATSAPP_NUMBER = "+393713708294";
-const WHATSAPP_TEXT = "Ciao Joseph, vorrei informazioni su questo immobile.";
-
-const waLink =
-  "https://wa.me/" +
-  WHATSAPP_NUMBER.replace(/\D/g,"") +
-  "?text=" + encodeURIComponent(WHATSAPP_TEXT);
-
-document.getElementById("whatsappBtn").href = waLink;
-window.WHATSAPP_LINK_FOR_CAPTION = waLink;
-</script>
-
 <div class="wrapper">
 
   <!-- TOP BAR -->
@@ -764,6 +710,14 @@ let state = {
   recordingChunks: [],
   currentVideoIndex: -1
 };
+
+// Keep references for canvas drawing loop
+let drawLoopRafId = null;
+function stopCanvasDrawLoop() {
+  if (drawLoopRafId) cancelAnimationFrame(drawLoopRafId);
+  drawLoopRafId = null;
+}
+
 
 // ================= DOM ELEMENTS =================
 const elements = {
@@ -1288,7 +1242,16 @@ async function startRecording() {
     canvas.width = 1080;
     canvas.height = 1920;
     const ctx = canvas.getContext('2d');
-    
+
+    // Ensure the video element is ready before drawing into canvas
+    const v = elements.cameraFeed;
+    if (v.readyState < 2) {
+      await new Promise((resolve) => {
+        const onReady = () => { v.removeEventListener('loadeddata', onReady); resolve(); };
+        v.addEventListener('loadeddata', onReady);
+      });
+    }
+
     const videoTrack = state.cameraStream.getVideoTracks()[0];
     const audioTrack = state.cameraStream.getAudioTracks()[0];
     
@@ -1297,11 +1260,68 @@ async function startRecording() {
       stream.addTrack(audioTrack);
     }
     
-    state.recorder = new MediaRecorder(stream, {
-      mimeType: 'video/webm;codecs=vp9,opus'
-    });
-    
-    state.recorder.ondataavailable = (event) => {
+    // Choose a supported mimeType (VP9 not always available)
+    const preferredTypes = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm'
+    ];
+    const chosenType = preferredTypes.find(t => MediaRecorder.isTypeSupported(t)) || '';
+    state.recorder = chosenType
+      ? new MediaRecorder(stream, { mimeType: chosenType })
+      : new MediaRecorder(stream);
+
+    // Draw loop: camera + overlays into canvas
+    stopCanvasDrawLoop();
+    const draw = () => {
+      // Background (camera)
+      try {
+        ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+      } catch (e) {
+        // drawImage can fail briefly during camera switches
+      }
+
+      // Overlay: question (top)
+      const question = (state.currentQuestion && state.currentQuestion.question)
+        ? state.currentQuestion.question
+        : '';
+      if (question) {
+        ctx.save();
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(60, 80, canvas.width - 120, 190);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 40px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        wrapText(ctx, question, 90, 135, canvas.width - 180, 52);
+        ctx.restore();
+      }
+
+      // Overlay: teleprompter text (bottom)
+      const teleText = (state.currentResponse || '').trim();
+      if (teleText) {
+        const maxChars = 320; // keep it readable on video
+        const snippet = teleText.length > maxChars ? teleText.slice(0, maxChars) + '…' : teleText;
+
+        const boxH = 520;
+        const boxY = canvas.height - boxH - 80;
+
+        ctx.save();
+        ctx.globalAlpha = 0.80;
+        ctx.fillStyle = '#000';
+        ctx.fillRect(60, boxY, canvas.width - 120, boxH);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#fff';
+        ctx.font = '600 42px system-ui, -apple-system, Segoe UI, Roboto, sans-serif';
+        wrapText(ctx, snippet, 90, boxY + 70, canvas.width - 180, 56);
+        ctx.restore();
+      }
+
+      drawLoopRafId = requestAnimationFrame(draw);
+    };
+    draw();
+
+state.recorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         state.recordingChunks.push(event.data);
       }
@@ -1330,6 +1350,7 @@ async function startRecording() {
       
       // Reset recording state
       state.isRecording = false;
+      stopCanvasDrawLoop();
       elements.recButton.classList.remove('recording');
       elements.recButton.textContent = 'REC';
     };
@@ -1497,6 +1518,25 @@ function updateUI() {
 
 // ================= INITIALIZE =================
 document.addEventListener('DOMContentLoaded', init);
+
+// Utility: wrap text in canvas
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  for (let n = 0; n < words.length; n++) {
+    const testLine = line + words[n] + ' ';
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && n > 0) {
+      ctx.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  }
+  ctx.fillText(line, x, y);
+}
+
 </script>
 </body>
 </html>
