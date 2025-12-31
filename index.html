@@ -67,7 +67,7 @@
         }
         
         .controls {
-            width: 300px;
+            width: 350px;
             background: #1e293b;
             border-radius: 12px;
             padding: 20px;
@@ -77,12 +77,30 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
-        .video-preview {
+        .video-section {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .video-preview {
             background: #1e293b;
             border-radius: 12px;
-            overflow: hidden;
+            padding: 20px;
+            flex: 1;
             position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .teleprompter-section {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
         }
         
@@ -90,7 +108,7 @@
             font-size: 16px;
             font-weight: 600;
             color: #94a3b8;
-            margin-bottom: 8px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -107,7 +125,7 @@
             margin-bottom: 5px;
         }
         
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 10px 12px;
             border-radius: 8px;
@@ -117,7 +135,13 @@
             font-size: 14px;
         }
         
-        input:focus, select:focus {
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: monospace;
+        }
+        
+        input:focus, select:focus, textarea:focus {
             outline: none;
             border-color: #3b82f6;
         }
@@ -175,6 +199,7 @@
         .buttons-row {
             display: flex;
             gap: 10px;
+            margin-top: 10px;
         }
         
         .caption-container {
@@ -195,38 +220,7 @@
             color: #cbd5e1;
         }
         
-        .caption-display {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(15, 23, 42, 0.85);
-            padding: 10px 0;
-            overflow: hidden;
-            border-top: 2px solid #3b82f6;
-        }
-        
-        .caption-scroll {
-            display: flex;
-            white-space: nowrap;
-            animation: scrollCaption 30s linear infinite;
-            padding: 5px 0;
-        }
-        
-        @keyframes scrollCaption {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
-        
-        .caption-item {
-            display: inline-block;
-            padding: 0 30px;
-            font-size: 18px;
-            font-weight: 500;
-            color: #3b82f6;
-            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-        }
-        
+        /* VIDEO PREVIEW STYLES */
         .video-overlay {
             position: absolute;
             top: 20px;
@@ -240,10 +234,8 @@
         
         .social-widget {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            background: rgba(15, 23, 42, 0.8);
+            gap: 20px;
+            background: rgba(15, 23, 42, 0.9);
             padding: 15px;
             border-radius: 12px;
             backdrop-filter: blur(5px);
@@ -297,6 +289,10 @@
             flex-direction: column;
             align-items: center;
             gap: 10px;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
         }
         
         .dots-container {
@@ -338,10 +334,14 @@
         }
         
         .property-info {
-            background: rgba(15, 23, 42, 0.9);
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(15, 23, 42, 0.95);
             padding: 15px;
             border-radius: 12px;
             backdrop-filter: blur(5px);
+            border: 2px solid #3b82f6;
             max-width: 300px;
         }
         
@@ -359,18 +359,37 @@
             margin-bottom: 10px;
         }
         
-        .property-details {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
-            font-size: 13px;
+        .property-type {
+            font-size: 16px;
             color: #cbd5e1;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 6px;
+            display: inline-block;
         }
         
-        .detail-item {
+        .camera-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #3b82f6;
             display: flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+            transition: all 0.2s;
+            z-index: 20;
+        }
+        
+        .camera-button:hover {
+            background: #2563eb;
+            transform: scale(1.05);
         }
         
         .recording-indicator {
@@ -400,24 +419,83 @@
             50% { opacity: 0.3; }
         }
         
-        .teleprompter-text {
+        .caption-display {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.9);
+            padding: 10px 0;
+            overflow: hidden;
+            border-top: 2px solid #3b82f6;
+        }
+        
+        .caption-scroll {
+            display: flex;
+            white-space: nowrap;
+            animation: scrollCaption 30s linear infinite;
+            padding: 5px 0;
+        }
+        
+        @keyframes scrollCaption {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
+        .caption-item {
+            display: inline-block;
+            padding: 0 30px;
+            font-size: 18px;
+            font-weight: 500;
+            color: #3b82f6;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+        
+        /* TELEPROMPTER STYLES */
+        .teleprompter-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .teleprompter-textarea {
+            flex: 1;
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid #334155;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #f1f5f9;
+            resize: none;
+            min-height: 150px;
+        }
+        
+        .teleprompter-display {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             width: 80%;
-            max-height: 60%;
+            max-height: 70%;
             overflow-y: auto;
             padding: 30px;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.95);
             border-radius: 12px;
-            border: 2px solid #3b82f6;
-            font-size: 24px;
-            line-height: 1.6;
+            border: 3px solid #3b82f6;
+            font-size: 28px;
+            line-height: 1.8;
             text-align: center;
             color: #f1f5f9;
-            backdrop-filter: blur(5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+            z-index: 100;
+        }
+        
+        .teleprompter-display h3 {
+            color: #60a5fa;
+            margin-bottom: 20px;
+            font-size: 24px;
         }
         
         .hidden {
@@ -434,29 +512,6 @@
             text-align: center;
         }
         
-        .camera-button {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #3b82f6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
-            transition: all 0.2s;
-            z-index: 20;
-        }
-        
-        .camera-button:hover {
-            background: #2563eb;
-            transform: scale(1.05);
-        }
-        
         .controls-footer {
             margin-top: auto;
             padding-top: 15px;
@@ -469,7 +524,7 @@
     <div class="header">
         <div class="logo">
             <i class="fas fa-home"></i>
-            RealEstate Pro
+            RealEstate Teleprompter
         </div>
         <div class="funcionario-info">
             <i class="fas fa-user-tie"></i>
@@ -490,24 +545,22 @@
                     <input type="text" id="propertyName" placeholder="Es: Trilocale Luminoso">
                 </div>
                 
-                <div class="form-group">
-                    <label for="propertyType">Tipologia Immobile</label>
-                    <select id="propertyType">
-                        <option value="">Seleziona tipologia</option>
-                        <option value="appartamento">Appartamento</option>
-                        <option value="villetta">Villetta</option>
-                        <option value="attico">Attico</option>
-                        <option value="loft">Loft</option>
-                        <option value="studio">Studio</option>
-                        <option value="bilocale">Bilocale</option>
-                        <option value="trilocale">Trilocale</option>
-                        <option value="quadrilocale">Quadrilocale</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="propertyPrice">Prezzo (€)</label>
-                    <input type="number" id="propertyPrice" placeholder="Es: 250000">
+                <div class="buttons-row">
+                    <div class="form-group" style="flex:1">
+                        <label for="propertyType">Tipologia</label>
+                        <select id="propertyType">
+                            <option value="appartamento">Appartamento</option>
+                            <option value="villetta">Villetta</option>
+                            <option value="attico">Attico</option>
+                            <option value="loft">Loft</option>
+                            <option value="studio">Studio</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="flex:1">
+                        <label for="propertyPrice">Prezzo (€)</label>
+                        <input type="number" id="propertyPrice" placeholder="250000">
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -528,78 +581,6 @@
                 <div class="form-group">
                     <label for="propertyBathrooms">Bagno/i</label>
                     <input type="text" id="propertyBathrooms" placeholder="Es: 1 / 2 / 1 finestrato">
-                </div>
-                
-                <div class="form-group">
-                    <label for="propertyHeating">Riscaldamento</label>
-                    <input type="text" id="propertyHeating" placeholder="Es: autonomo / centralizzato">
-                </div>
-                
-                <div class="buttons-row">
-                    <div class="form-group" style="flex:1">
-                        <label for="hasGarden">Giardino</label>
-                        <select id="hasGarden">
-                            <option value="no">No</option>
-                            <option value="si">Sì</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" style="flex:1">
-                        <label for="hasGarage">Garage/Box</label>
-                        <select id="hasGarage">
-                            <option value="no">No</option>
-                            <option value="si">Sì</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="buttons-row">
-                    <div class="form-group" style="flex:1">
-                        <label for="hasFurniture">Arredamento</label>
-                        <select id="hasFurniture">
-                            <option value="no">No</option>
-                            <option value="parziale">Parziale</option>
-                            <option value="completo">Completo</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" style="flex:1">
-                        <label for="hasElevator">Ascensore</label>
-                        <select id="hasElevator">
-                            <option value="no">No</option>
-                            <option value="si">Sì</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="buttons-row">
-                    <div class="form-group" style="flex:1">
-                        <label for="isFree">Libero</label>
-                        <select id="isFree">
-                            <option value="immediatamente">Immediatamente</option>
-                            <option value="trattativa">In Trattativa</option>
-                            <option value="libero">Libero</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" style="flex:1">
-                        <label for="isRenovated">Ristrutturato</label>
-                        <select id="isRenovated">
-                            <option value="no">No</option>
-                            <option value="si">Sì</option>
-                            <option value="parziale">Parzialmente</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="propertyClass">Classe Immobile</label>
-                    <input type="text" id="propertyClass" placeholder="Es: A4 / B / C ...">
-                </div>
-                
-                <div class="form-group">
-                    <label for="constructionYear">Anno di Costruzione</label>
-                    <input type="number" id="constructionYear" placeholder="Es: 1998">
                 </div>
                 
                 <button class="btn btn-primary" id="generateCaption">
@@ -631,8 +612,9 @@
             </div>
         </div>
         
-        <div class="video-preview" id="videoPreview">
-            <div class="video-overlay">
+        <div class="video-section">
+            <div class="video-preview" id="videoPreview">
+                <!-- Animated Dots e Timer -->
                 <div class="animated-dots">
                     <div class="dots-container">
                         <div class="dot"></div>
@@ -643,6 +625,7 @@
                     <div class="timer-display" id="timerDisplay">02:00</div>
                 </div>
                 
+                <!-- Social Widget -->
                 <div class="social-widget">
                     <div class="social-button" id="likeButton">
                         <div class="social-icon like-icon">
@@ -665,54 +648,58 @@
                         <div class="social-text">Chiamami</div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="property-info">
-                <div class="property-title" id="displayPropertyName">Trilocale Luminoso</div>
-                <div class="property-price" id="displayPropertyPrice">€ 250.000</div>
-                <div class="property-details">
-                    <div class="detail-item">
-                        <i class="fas fa-ruler-combined"></i>
-                        <span id="displayPropertySize">85 mq</span>
+                
+                <!-- Property Info -->
+                <div class="property-info">
+                    <div class="property-title" id="displayPropertyName">Trilocale Luminoso</div>
+                    <div class="property-price" id="displayPropertyPrice">€ 250.000</div>
+                    <div class="property-type" id="displayPropertyType">Appartamento</div>
+                </div>
+                
+                <!-- Camera Button -->
+                <div class="camera-button" id="cameraButton">
+                    <i class="fas fa-camera"></i>
+                </div>
+                
+                <!-- Recording Indicator -->
+                <div class="recording-indicator hidden" id="recordingIndicator">
+                    <div class="rec-dot"></div>
+                    <span>REC</span>
+                </div>
+                
+                <!-- Scrolling Caption -->
+                <div class="caption-display">
+                    <div class="caption-scroll" id="captionScroll">
+                        <!-- La caption scorrerà qui -->
                     </div>
-                    <div class="detail-item">
-                        <i class="fas fa-building"></i>
-                        <span id="displayPropertyType">Appartamento</span>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-layer-group"></i>
-                        <span id="displayPropertyFloor">2° piano</span>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-door-open"></i>
-                        <span id="displayPropertyRooms">3 locali</span>
-                    </div>
+                </div>
+                
+                <!-- Teleprompter Display -->
+                <div class="teleprompter-display hidden" id="teleprompterDisplay">
+                    <!-- Il testo del teleprompter apparirà qui -->
                 </div>
             </div>
             
-            <div class="camera-button" id="cameraButton">
-                <i class="fas fa-camera"></i>
-            </div>
-            
-            <div class="recording-indicator hidden" id="recordingIndicator">
-                <div class="rec-dot"></div>
-                <span>REC</span>
-            </div>
-            
-            <div class="caption-display">
-                <div class="caption-scroll" id="captionScroll">
-                    <!-- La caption scorrerà qui -->
+            <div class="teleprompter-section">
+                <div class="section-title">
+                    <i class="fas fa-scroll"></i>
+                    TELEPROMPTER
                 </div>
-            </div>
-            
-            <div class="teleprompter-text hidden" id="teleprompterText">
-                <!-- Il testo del teleprompter apparirà qui -->
+                <div class="teleprompter-controls">
+                    <button class="btn btn-secondary" id="pasteAnswer">
+                        <i class="fas fa-paste"></i> Incolla Risposta
+                    </button>
+                    <button class="btn btn-primary" id="showTeleprompter">
+                        <i class="fas fa-eye"></i> Mostra Teleprompter
+                    </button>
+                </div>
+                <textarea class="teleprompter-textarea" id="teleprompterTextarea" placeholder="Incolla qui la risposta da ChatGPT o scrivi manualmente..."></textarea>
             </div>
         </div>
     </div>
     
     <div class="status-bar" id="statusBar">
-        Pronto per inserire i dati dell'immobile
+        Sistema pronto. Inserisci i dati dell'immobile e genera la caption.
     </div>
 
     <script>
@@ -722,14 +709,16 @@
             const copyCaptionBtn = document.getElementById('copyCaption');
             const newQuestionBtn = document.getElementById('newQuestion');
             const startTeleprompterBtn = document.getElementById('startTeleprompter');
+            const pasteAnswerBtn = document.getElementById('pasteAnswer');
+            const showTeleprompterBtn = document.getElementById('showTeleprompter');
             const captionOutput = document.getElementById('captionOutput');
             const captionScroll = document.getElementById('captionScroll');
-            const teleprompterText = document.getElementById('teleprompterText');
+            const teleprompterTextarea = document.getElementById('teleprompterTextarea');
+            const teleprompterDisplay = document.getElementById('teleprompterDisplay');
             const statusBar = document.getElementById('statusBar');
             const timerDisplay = document.getElementById('timerDisplay');
             const recordingIndicator = document.getElementById('recordingIndicator');
             const cameraButton = document.getElementById('cameraButton');
-            const videoPreview = document.getElementById('videoPreview');
             
             // Elementi per i dati dell'immobile
             const propertyNameInput = document.getElementById('propertyName');
@@ -739,23 +728,11 @@
             const propertyFloorInput = document.getElementById('propertyFloor');
             const propertyRoomsInput = document.getElementById('propertyRooms');
             const propertyBathroomsInput = document.getElementById('propertyBathrooms');
-            const propertyHeatingInput = document.getElementById('propertyHeating');
-            const hasGardenInput = document.getElementById('hasGarden');
-            const hasGarageInput = document.getElementById('hasGarage');
-            const hasFurnitureInput = document.getElementById('hasFurniture');
-            const hasElevatorInput = document.getElementById('hasElevator');
-            const isFreeInput = document.getElementById('isFree');
-            const isRenovatedInput = document.getElementById('isRenovated');
-            const propertyClassInput = document.getElementById('propertyClass');
-            const constructionYearInput = document.getElementById('constructionYear');
             
             // Elementi per la visualizzazione nel video
             const displayPropertyName = document.getElementById('displayPropertyName');
             const displayPropertyPrice = document.getElementById('displayPropertyPrice');
-            const displayPropertySize = document.getElementById('displayPropertySize');
             const displayPropertyType = document.getElementById('displayPropertyType');
-            const displayPropertyFloor = document.getElementById('displayPropertyFloor');
-            const displayPropertyRooms = document.getElementById('displayPropertyRooms');
             
             // Variabili di stato
             let isRecording = false;
@@ -773,32 +750,17 @@
                     displayPropertyPrice.textContent = `€ ${price}`;
                 }
                 
-                if (propertySizeInput.value) {
-                    displayPropertySize.textContent = `${propertySizeInput.value} mq`;
-                }
-                
                 if (propertyTypeInput.value) {
                     // Capitalizza la prima lettera
                     const type = propertyTypeInput.value;
                     displayPropertyType.textContent = type.charAt(0).toUpperCase() + type.slice(1);
-                }
-                
-                if (propertyFloorInput.value) {
-                    displayPropertyFloor.textContent = propertyFloorInput.value;
-                }
-                
-                if (propertyRoomsInput.value) {
-                    displayPropertyRooms.textContent = propertyRoomsInput.value;
                 }
             }
             
             // Aggiorna i campi dell'immobile quando cambiano
             propertyNameInput.addEventListener('input', updatePropertyDisplay);
             propertyPriceInput.addEventListener('input', updatePropertyDisplay);
-            propertySizeInput.addEventListener('input', updatePropertyDisplay);
             propertyTypeInput.addEventListener('change', updatePropertyDisplay);
-            propertyFloorInput.addEventListener('input', updatePropertyDisplay);
-            propertyRoomsInput.addEventListener('input', updatePropertyDisplay);
             
             // Genera la caption
             generateCaptionBtn.addEventListener('click', function() {
@@ -812,29 +774,11 @@
                 const propertyFloor = propertyFloorInput.value || "Piano da definire";
                 const propertyRooms = propertyRoomsInput.value || "Locali da definire";
                 const propertyBathrooms = propertyBathroomsInput.value || "Bagno/i da definire";
-                const propertyHeating = propertyHeatingInput.value || "Riscaldamento da definire";
-                const hasGarden = hasGardenInput.value === 'si' ? "Con giardino" : "Senza giardino";
-                const hasGarage = hasGarageInput.value === 'si' ? "Con garage/box" : "Senza garage";
-                const hasFurniture = hasFurnitureInput.value === 'no' ? "Non arredato" : 
-                    hasFurnitureInput.value === 'parziale' ? "Parzialmente arredato" : "Completamente arredato";
-                const hasElevator = hasElevatorInput.value === 'si' ? "Con ascensore" : "Senza ascensore";
-                const isFree = isFreeInput.value === 'immediatamente' ? "Libero immediatamente" : 
-                    isFreeInput.value === 'trattativa' ? "In trattativa" : "Libero";
-                const isRenovated = isRenovatedInput.value === 'si' ? "Ristrutturato di recente" : 
-                    isRenovatedInput.value === 'parziale' ? "Parzialmente ristrutturato" : "Da ristrutturare";
-                const propertyClass = propertyClassInput.value || "Classe da definire";
-                const constructionYear = constructionYearInput.value || "Anno da definire";
                 
                 // Crea la caption
                 const caption = `🏠 ${propertyName} | ${propertyType} | ${propertyPrice}
 📍 ${propertySize} | ${propertyRooms} | ${propertyBathrooms}
-🏢 Piano: ${propertyFloor} | ${hasElevator}
-🔥 Riscaldamento: ${propertyHeating}
-🌳 ${hasGarden} | 🚗 ${hasGarage}
-🛋️ ${hasFurniture} | 🛠️ ${isRenovated}
-📊 Classe energetica: ${propertyClass}
-🏗️ Anno di costruzione: ${constructionYear}
-✅ ${isFree}
+🏢 Piano: ${propertyFloor}
 📞 Contatta il funzionario: +39 333 123 4567`;
                 
                 // Mostra la caption nell'area di testo
@@ -889,10 +833,7 @@
             
             // Nuova domanda (simula ChatGPT)
             newQuestionBtn.addEventListener('click', function() {
-                // Mostra il teleprompter con una domanda di esempio
-                teleprompterText.classList.remove('hidden');
-                
-                // Simula una risposta da ChatGPT
+                // Simula una domanda da ChatGPT
                 const questions = [
                     "Puoi descrivermi le caratteristiche principali di questo immobile?",
                     "Quali sono i vantaggi dell'ubicazione di questa proprietà?",
@@ -907,13 +848,67 @@
                 ];
                 
                 const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-                teleprompterText.textContent = `Domanda: ${randomQuestion}\n\nRisposta (da ChatGPT): Questo immobile presenta numerosi vantaggi tra cui...`;
+                
+                // Inserisci la domanda nel teleprompter
+                teleprompterTextarea.value = `DOMANDA: ${randomQuestion}\n\nRISPOSTA: `;
+                
+                // Focus sul teleprompter
+                teleprompterTextarea.focus();
                 
                 statusBar.textContent = "Nuova domanda generata. Incolla la risposta nel teleprompter.";
                 statusBar.style.color = "#8b5cf6";
+            });
+            
+            // Incolla risposta (simula incolla da ChatGPT)
+            pasteAnswerBtn.addEventListener('click', function() {
+                // Simula una risposta da ChatGPT
+                const answers = [
+                    "Questo immobile presenta numerosi vantaggi tra cui una posizione centrale, luminosità ottimale grazie all'esposizione sud e uno stato di manutenzione eccellente. Recentemente ristrutturato con materiali di alta qualità.",
+                    "La proprietà si trova in una zona residenziale molto tranquilla, a soli 10 minuti a piedi dal centro città. Servita da mezzi pubblici e vicina a scuole, supermercati e parchi.",
+                    "L'appartamento è in ottime condizioni, con impianti elettrici e idraulici completamente rifatti nel 2022. Le finiture sono di pregio con parquet in rovere massello e infissi a taglio termico.",
+                    "Certamente! Possiamo organizzare una visita per giovedì o venerdì pomeriggio. Mi può confermare quale giorno preferisce?",
+                    "Le spese condominiali ammontano a € 120 mensili e includono riscaldamento centralizzato, pulizia scale, manutenzione dell'ascensore e illuminazione comune.",
+                    "Assolutamente sì. La zona è sicura e silenziosa, con un parco giochi a 200 metri e scuole elementari nelle vicinanze. L'appartamento stesso ha una pianta molto funzionale per una famiglia.",
+                    "Sì, per i primi acquirenti under 36 è possibile accedere al mutuo giovane con agevolazioni fiscali e l'esenzione dall'imposta di registro per il 50% del valore.",
+                    "La proprietà è stata costruita nel 2015 da un noto costruttore locale. L'attuale proprietario l'ha acquistata nel 2018 e l'ha mantenuta in condizioni impeccabili.",
+                    "Nella vendita sono inclusi cucina componibile con elettrodomestici (frigorifero, forno, piano cottura), climatizzatori in ogni stanza e tutte le tende oscuranti.",
+                    "Negli ultimi 2 anni sono stati sostituiti il boiler, installati i condizionatori in ogni ambiente, e rifatta la pittura completa di tutti gli interni."
+                ];
                 
-                // Mostra il bottone per la fotocamera
-                cameraButton.classList.remove('hidden');
+                const randomAnswer = answers[Math.floor(Math.random() * answers.length)];
+                
+                // Se c'è già del testo, aggiungi la risposta
+                if (teleprompterTextarea.value.includes("RISPOSTA:")) {
+                    teleprompterTextarea.value = teleprompterTextarea.value.split("RISPOSTA:")[0] + "RISPOSTA: " + randomAnswer;
+                } else {
+                    teleprompterTextarea.value += randomAnswer;
+                }
+                
+                statusBar.textContent = "Risposta incollata nel teleprompter!";
+                statusBar.style.color = "#10b981";
+            });
+            
+            // Mostra il teleprompter nel video
+            showTeleprompterBtn.addEventListener('click', function() {
+                const text = teleprompterTextarea.value.trim();
+                
+                if (text) {
+                    teleprompterDisplay.innerHTML = `<h3>TELEPROMPTER</h3><div>${text.replace(/\n/g, '<br>')}</div>`;
+                    teleprompterDisplay.classList.remove('hidden');
+                    
+                    statusBar.textContent = "Teleprompter visibile sul video. Premi ESC per nasconderlo.";
+                    statusBar.style.color = "#3b82f6";
+                } else {
+                    statusBar.textContent = "Il teleprompter è vuoto! Inserisci prima del testo.";
+                    statusBar.style.color = "#ef4444";
+                }
+            });
+            
+            // Nascondi teleprompter con ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    teleprompterDisplay.classList.add('hidden');
+                }
             });
             
             // Timer per la registrazione
@@ -941,10 +936,10 @@
                 recordingIndicator.classList.remove('hidden');
                 timerDisplay.textContent = "02:00";
                 
-                // Nascondi il teleprompter dopo 5 secondi
+                // Nascondi il teleprompter dopo 3 secondi
                 setTimeout(() => {
-                    teleprompterText.classList.add('hidden');
-                }, 5000);
+                    teleprompterDisplay.classList.add('hidden');
+                }, 3000);
                 
                 // Avvia il timer
                 timerInterval = setInterval(updateTimer, 1000);
@@ -952,9 +947,6 @@
                 // Aggiorna lo status
                 statusBar.textContent = "Registrazione in corso... Timer di 120 secondi attivo";
                 statusBar.style.color = "#ef4444";
-                
-                // Nascondi il bottone per avviare il teleprompter
-                startTeleprompterBtn.classList.add('hidden');
             }
             
             // Ferma la registrazione
@@ -974,9 +966,6 @@
                 
                 // Ripristina il timer
                 timerDisplay.textContent = "02:00";
-                
-                // Mostra di nuovo il bottone per avviare il teleprompter
-                startTeleprompterBtn.classList.remove('hidden');
                 
                 // Aggiorna lo status
                 statusBar.textContent = "Registrazione completata!";
@@ -1019,21 +1008,12 @@
             
             // Inizializza con dati di esempio
             propertyNameInput.value = "Trilocale Luminoso con Terrazzo";
-            propertyTypeInput.value = "trilocale";
+            propertyTypeInput.value = "appartamento";
             propertyPriceInput.value = "250000";
             propertySizeInput.value = "85";
             propertyFloorInput.value = "2° piano";
             propertyRoomsInput.value = "3 locali";
             propertyBathroomsInput.value = "1 bagno finestrato";
-            propertyHeatingInput.value = "autonomo";
-            hasGardenInput.value = "si";
-            hasGarageInput.value = "si";
-            hasFurnitureInput.value = "parziale";
-            hasElevatorInput.value = "si";
-            isFreeInput.value = "immediatamente";
-            isRenovatedInput.value = "si";
-            propertyClassInput.value = "A4";
-            constructionYearInput.value = "2015";
             
             // Genera una caption iniziale
             setTimeout(() => {
