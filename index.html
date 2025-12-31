@@ -721,31 +721,14 @@
       max-width: 300px;
     }
     
-    .notification.success {
-      border-left: 4px solid var(--success);
-    }
-    
-    .notification.error {
-      border-left: 4px solid var(--danger);
-    }
-    
-    .notification.info {
-      border-left: 4px solid var(--info);
-    }
-    
-    .notification.warning {
-      border-left: 4px solid var(--warning);
-    }
+    .notification.success { border-left: 4px solid var(--success); }
+    .notification.error   { border-left: 4px solid var(--danger); }
+    .notification.info    { border-left: 4px solid var(--info); }
+    .notification.warning { border-left: 4px solid var(--warning); }
     
     @keyframes slideIn {
-      from {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0); opacity: 1; }
     }
     
     /* ===== MODAL ===== */
@@ -767,9 +750,7 @@
       to { opacity: 1; }
     }
     
-    .modalBackdrop.show {
-      display: flex;
-    }
+    .modalBackdrop.show { display: flex; }
     
     .modalCard {
       width: min(920px, 96vw);
@@ -783,14 +764,8 @@
     }
     
     @keyframes modalSlideIn {
-      from {
-        transform: translateY(-20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+      from { transform: translateY(-20px); opacity: 0; }
+      to   { transform: translateY(0); opacity: 1; }
     }
     
     .modalHead {
@@ -818,18 +793,10 @@
       color: var(--text);
     }
     
-    .modalBody .k {
-      color: var(--primary);
-      font-weight: 600;
-    }
+    .modalBody .k { color: var(--primary); font-weight: 600; }
     
-    .modalBody ul {
-      margin: var(--spacing-sm) 0 var(--spacing-md) 18px;
-    }
-    
-    .modalBody li {
-      margin: 6px 0;
-    }
+    .modalBody ul { margin: var(--spacing-sm) 0 var(--spacing-md) 18px; }
+    .modalBody li { margin: 6px 0; }
     
     .hr {
       height: 1px;
@@ -839,41 +806,17 @@
     
     /* ===== MOBILE OPTIMIZATIONS ===== */
     @media (max-width: 768px) {
-      .btn {
-        min-height: 44px;
-        font-size: 12px;
-      }
-      
-      input, select, textarea {
-        font-size: 16px;
-      }
-      
-      .layout {
-        gap: var(--spacing-sm);
-      }
-      
-      .stageBlock {
-        width: 100%;
-      }
+      .btn { min-height: 44px; font-size: 12px; }
+      input, select, textarea { font-size: 16px; }
+      .layout { gap: var(--spacing-sm); }
+      .stageBlock { width: 100%; }
     }
     
     @media (max-width: 480px) {
-      .wrap {
-        padding: var(--spacing-sm) var(--spacing-xs) 70px;
-      }
-      
-      .btn {
-        flex: 1;
-        min-width: 0;
-      }
-      
-      .row {
-        justify-content: center;
-      }
-      
-      .bar {
-        justify-content: center;
-      }
+      .wrap { padding: var(--spacing-sm) var(--spacing-xs) 70px; }
+      .btn { flex: 1; min-width: 0; }
+      .row { justify-content: center; }
+      .bar { justify-content: center; }
     }
     
     /* ===== DARK MODE ADJUSTMENTS ===== */
@@ -1360,8 +1303,8 @@ Regole fondamentali:
   QUESTION_BANK: [
     { q: "Scrivimi un testo per un video di 20-30 secondi che presenti questo immobile in modo super attraente." },
     { q: "Crea una caption Instagram persuasiva per questo immobile, con call-to-action forte." },
-    { q: "Fammi una versione più emozionale e una più "dati e concretezza" per lo stesso immobile." },
-    { q: "Scrivi un testo stile "tour rapido" (come se stessi mostrando le stanze) per questo immobile." },
+    { q: 'Fammi una versione più emozionale e una più "dati e concretezza" per lo stesso immobile.' },
+    { q: 'Scrivi un testo stile "tour rapido" (come se stessi mostrando le stanze) per questo immobile.' },
     { q: "Scrivi una versione pensata per chi cerca prima casa (tono rassicurante)." },
     { q: "Scrivi una versione pensata per investitori (tono pratico, focalizzato sul valore)." },
   ],
@@ -1540,7 +1483,8 @@ class StorageManager {
 class NotificationManager {
   static show(message, type = 'info', duration = 5000) {
     const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
+    // FIX: classi coerenti con CSS (.notification.success/.error/.info/.warning)
+    notification.className = `notification ${type}`;
     notification.textContent = message;
     notification.setAttribute('role', 'alert');
     notification.setAttribute('aria-live', 'polite');
@@ -1563,6 +1507,11 @@ class NotificationManager {
   
   static showSuccess(message) {
     return this.show(message, 'success', 3000);
+  }
+  
+  // FIX: mancava ma viene chiamata (stopRecording)
+  static showInfo(message) {
+    return this.show(message, 'info', 4000);
   }
 }
 
@@ -2109,9 +2058,7 @@ class RecordingManager {
     
     if (confirm("Svuotare la lista? Tutti i video saranno rimossi.")) {
       this.state.recordings.forEach(r => {
-        try {
-          URL.revokeObjectURL(r.url);
-        } catch (e) {}
+        try { URL.revokeObjectURL(r.url); } catch (e) {}
       });
       
       this.state.recordings = [];
@@ -2176,65 +2123,324 @@ class VideoCreatorApp {
     });
     
     window.addEventListener('unhandledrejection', (event) => {
-      console.error('Promise rifiutata non gestita:', event.reason);
-      NotificationManager.showError('Errore in operazione asincrona.');
+      console.error('Promise rejection non gestita:', event.reason);
+      NotificationManager.showError('Errore imprevisto. Controlla la console per i dettagli.');
     });
   }
   
-  loadPrompt() {
-    try {
-      const saved = StorageManager.get('prompt_text');
-      this.state.promptText = (saved && saved.trim()) ? saved : CONFIG.BASE_PROMPT;
-    } catch (error) {
-      console.error('Errore caricamento prompt:', error);
-      this.state.promptText = CONFIG.BASE_PROMPT;
-    }
+  initUI() {
+    // Aggiorna profilo iniziale
+    this.profileManager.refreshUI();
+    // Counters
+    this.recordingManager.updateCounters();
+    this.recordingManager.renderList();
+    // Property status
+    PropertyManager.updateStatus();
     
-    const promptBox = Utilities.$('promptBox');
-    if (promptBox) {
-      promptBox.value = this.state.promptText;
-    }
+    // Speed label
+    this.setSpeed(this.state.teleprompterSeconds);
+    // Zoom UI
+    this.applyZoom(this.state.zoomValue);
+  }
+  
+  setupAutoSave() {
+    // Autosave property
+    PropertyManager.FIELDS.forEach(([id]) => {
+      const el = Utilities.$(id);
+      if (el) el.addEventListener('input', () => { PropertyManager.updateStatus(); PropertyManager.save(); });
+    });
     
-    this.lockPromptUI();
+    // Autosave answer
+    Utilities.$('answerBox')?.addEventListener('input', () => {
+      StorageManager.set('answer_box', Utilities.$('answerBox')?.value || '');
+    });
+    
+    // Autosave (safety) ogni 30s
+    setInterval(() => {
+      try {
+        PropertyManager.save();
+        if (this.state.lastCaptionClean) StorageManager.set('caption_clean', this.state.lastCaptionClean);
+        StorageManager.set('answer_box', Utilities.$('answerBox')?.value || '');
+        StorageManager.set('rotation_index', this.state.rotationIndex || 0);
+      } catch (e) {}
+    }, 30000);
+  }
+  
+  setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      const tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+      const isTyping = tag === 'input' || tag === 'textarea' || tag === 'select';
+      
+      // Ctrl/Cmd + S => salva prompt/caption/property (best effort)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        PropertyManager.save();
+        StorageManager.set('caption_clean', this.state.lastCaptionClean || '');
+        StorageManager.set('answer_box', Utilities.$('answerBox')?.value || '');
+        NotificationManager.showSuccess("Salvato");
+        return;
+      }
+      
+      // Space => start/stop teleprompter (solo se non stai scrivendo)
+      if (e.code === 'Space' && !isTyping) {
+        e.preventDefault();
+        if (this.state.isTeleprompterRunning) this.teleprompter.stop();
+        else this.teleprompter.start();
+        return;
+      }
+      
+      // ESC => chiudi modal istruzioni
+      if (e.key === 'Escape') {
+        this.closeInstructions();
+      }
+    });
   }
   
   loadPropertyData() {
     PropertyManager.load();
-    
-    // Setup listeners per auto-save
-    PropertyManager.FIELDS.forEach(([id]) => {
-      const el = Utilities.$(id);
-      if (el) {
-        el.addEventListener('input', () => {
-          PropertyManager.updateStatus();
-          PropertyManager.save();
-        });
-        el.addEventListener('change', () => {
-          PropertyManager.updateStatus();
-          PropertyManager.save();
-        });
-      }
-    });
   }
   
   restoreCaption() {
-    try {
-      const savedCap = StorageManager.get('caption_clean') || '';
-      const rememberCheck = Utilities.$('chkRememberCaption');
-      
-      if (savedCap.trim() && rememberCheck && rememberCheck.checked) {
-        this.setCaptionClean(savedCap);
-      }
-    } catch (error) {
-      console.error('Errore caricamento caption:', error);
+    const saved = StorageManager.get('caption_clean');
+    if (saved != null) {
+      this.state.lastCaptionClean = String(saved);
+      this.updateCaptionPreview();
     }
   }
   
-  setupEventListeners() {
-    // Navigation
-    Utilities.$('btnBackTop')?.addEventListener('click', () => this.goToGestionale());
-    Utilities.$('btnBackBottom')?.addEventListener('click', () => this.goToGestionale());
+  loadPrompt() {
+    const saved = StorageManager.get('prompt_text');
+    this.state.promptText = saved ? String(saved) : CONFIG.BASE_PROMPT;
     
+    const promptBox = Utilities.$('promptBox');
+    if (promptBox) promptBox.value = this.state.promptText;
+    
+    this.lockPromptUI(true);
+  }
+  
+  lockPromptUI(locked) {
+    const promptBox = Utilities.$('promptBox');
+    const pill = Utilities.$('promptStatePill');
+    const saveBtn = Utilities.$('btnSavePrompt');
+    const resetBtn = Utilities.$('btnResetPrompt');
+    
+    if (promptBox) promptBox.readOnly = locked;
+    if (pill) pill.textContent = locked ? "Bloccato" : "Sbloccato";
+    if (saveBtn) saveBtn.disabled = locked;
+    if (resetBtn) resetBtn.disabled = locked;
+  }
+  
+  unlockPrompt() {
+    const code = (Utilities.$('unlockCode')?.value || '').trim();
+    if (code !== CONFIG.UNLOCK_CODE) {
+      NotificationManager.showError("Codice errato.");
+      return;
+    }
+    this.lockPromptUI(false);
+    NotificationManager.showSuccess("Prompt sbloccato");
+  }
+  
+  savePrompt() {
+    const promptBox = Utilities.$('promptBox');
+    if (!promptBox) return;
+    this.state.promptText = promptBox.value || '';
+    StorageManager.set('prompt_text', this.state.promptText);
+    this.lockPromptUI(true);
+    NotificationManager.showSuccess("Prompt salvato");
+  }
+  
+  resetPrompt() {
+    const promptBox = Utilities.$('promptBox');
+    if (!promptBox) return;
+    promptBox.value = CONFIG.BASE_PROMPT;
+    this.state.promptText = CONFIG.BASE_PROMPT;
+    StorageManager.set('prompt_text', this.state.promptText);
+    this.lockPromptUI(true);
+    NotificationManager.showSuccess("Prompt ripristinato");
+  }
+  
+  nextQuestion() {
+    this.state.qIdx = (this.state.qIdx + 1) % CONFIG.QUESTION_BANK.length;
+    this.state.currentQuestion = CONFIG.QUESTION_BANK[this.state.qIdx].q;
+    const qBox = Utilities.$('questionBoxOverlay');
+    if (qBox) qBox.textContent = this.state.currentQuestion;
+  }
+  
+  buildFullPromptForChatGPT() {
+    const propertyData = PropertyManager.getData();
+    const propertyText = PropertyManager.dataToText(propertyData);
+    
+    return `${this.state.promptText}
+
+📌 DATI IMMOBILE:
+${propertyText}
+
+❓ DOMANDA:
+${this.state.currentQuestion}
+`;
+  }
+  
+  async openChatGPT() {
+    if (!this.state.currentQuestion) {
+      NotificationManager.showError("Prima premi 'Nuova domanda'.");
+      return;
+    }
+    
+    const full = this.buildFullPromptForChatGPT();
+    const ok = await Utilities.copyText(full);
+    if (ok) {
+      window.open(CONFIG.CHATGPT_URL, "_blank", "noopener,noreferrer");
+      NotificationManager.showSuccess("Prompt copiato negli appunti");
+    } else {
+      NotificationManager.showError("Impossibile copiare negli appunti.");
+    }
+  }
+  
+  async pasteAnswer() {
+    const txt = await Utilities.readClipboardText();
+    if (!txt.trim()) {
+      NotificationManager.showError("Appunti vuoti o permesso negato.");
+      return;
+    }
+    const box = Utilities.$('answerBox');
+    if (box) {
+      box.value = txt;
+      StorageManager.set('answer_box', txt);
+      NotificationManager.showSuccess("Risposta incollata");
+    }
+  }
+  
+  sendToTeleprompter() {
+    const a = Utilities.$('answerBox')?.value || '';
+    const ok = this.teleprompter.applyAnswer(a);
+    if (!ok) {
+      NotificationManager.showError("Inserisci o incolla una risposta prima.");
+      return;
+    }
+    this.extractCaptionFromAnswer(a);
+    NotificationManager.showSuccess("Inviato al teleprompter");
+  }
+  
+  extractCaptionFromAnswer(answer) {
+    // Heuristica semplice: salva tutto come caption clean (senza hashtag fissi)
+    const clean = String(answer || '').trim();
+    this.state.lastCaptionClean = clean;
+    this.updateCaptionPreview();
+    
+    const remember = Utilities.$('chkRememberCaption')?.checked;
+    if (remember) {
+      StorageManager.set('caption_clean', clean);
+    }
+  }
+  
+  updateCaptionPreview() {
+    const box = Utilities.$('captionPreview');
+    if (!box) return;
+    box.textContent = this.state.lastCaptionClean ? this.state.lastCaptionClean : "—";
+  }
+  
+  async copyCaption() {
+    const base = String(this.state.lastCaptionClean || '').trim();
+    if (!base) {
+      NotificationManager.showError("Nessuna caption disponibile.");
+      return;
+    }
+    
+    // Aggiungi hashtag fissi solo se non presenti
+    const hasFixed = CONFIG.HIDDEN_HASHTAGS.split(/\s+/).some(tag => base.includes(tag));
+    const finalText = hasFixed ? base : `${base}\n\n${CONFIG.HIDDEN_HASHTAGS}`;
+    
+    const ok = await Utilities.copyText(finalText);
+    if (ok) NotificationManager.showSuccess("Caption copiata");
+    else NotificationManager.showError("Impossibile copiare caption.");
+  }
+  
+  setSpeed(seconds) {
+    this.state.teleprompterSeconds = seconds;
+    const lbl = Utilities.$('speedLabel');
+    if (lbl) lbl.textContent = `Vel: ${seconds}s`;
+  }
+  
+  applyZoom(val) {
+    const z = parseFloat(val);
+    this.state.zoomValue = isFinite(z) ? z : 1.0;
+    
+    const cam = Utilities.$('cam');
+    if (cam) cam.style.setProperty('--zoom', String(this.state.zoomValue));
+    
+    const zv = Utilities.$('zoomVal');
+    if (zv) zv.textContent = `${this.state.zoomValue.toFixed(1)}x`;
+  }
+  
+  async startTeleRec() {
+    const ok = await this.videoRecorder.ensureReady();
+    if (!ok) return;
+    this.videoRecorder.startRecording();
+  }
+  
+  downloadVideo() {
+    const i = this.state.currentRecIndex;
+    if (i < 0 || i >= this.state.recordings.length) {
+      NotificationManager.showError("Nessun video selezionato.");
+      return;
+    }
+    const r = this.state.recordings[i];
+    if (!r || !r.blob) {
+      NotificationManager.showError("Video non disponibile.");
+      return;
+    }
+    this.videoRecorder.downloadBlob(r.blob, r.name || "video.webm");
+  }
+  
+  handleVideoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    const url = URL.createObjectURL(file);
+    this.state.totalVideos += 1;
+    const title = `#${String(this.state.totalVideos).padStart(3, "0")} • upload • ${file.name}`;
+    
+    this.state.recordings.unshift({
+      title,
+      name: file.name,
+      url,
+      blob: file,
+      question: "UPLOAD",
+      captionClean: "",
+      platform: "upload"
+    });
+    
+    this.state.currentRecIndex = 0;
+    
+    const playback = Utilities.$('playback');
+    if (playback) {
+      playback.src = url;
+      playback.load();
+    }
+    
+    this.recordingManager.renderList();
+    this.recordingManager.updateCounters();
+    NotificationManager.showSuccess("Video caricato in lista");
+    
+    // reset input
+    e.target.value = "";
+  }
+  
+  openInstructions() {
+    const modal = Utilities.$('instructionsModal');
+    if (!modal) return;
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+  
+  closeInstructions() {
+    const modal = Utilities.$('instructionsModal');
+    if (!modal) return;
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+  
+  setupEventListeners() {
     // Questions
     Utilities.$('btnNext')?.addEventListener('click', () => this.nextQuestion());
     
@@ -2316,435 +2522,20 @@ class VideoCreatorApp {
     });
     
     Utilities.$('uploadVideo')?.addEventListener('change', (e) => this.handleVideoUpload(e));
-  }
-  
-  initUI() {
-    // Inizializza teleprompter
-    const teleText = Utilities.$('teleText');
-    if (teleText) {
-      teleText.textContent = "Incolla/scrivi una risposta in alto → \"Invia al teleprompter\" → \"Teleprompter + REC\".";
-    }
     
-    this.showQuestionInOverlay("Premi \"Nuova domanda\".");
-    this.recordingManager.updateCounters();
-    this.profileManager.refreshUI();
-    this.recordingManager.renderList();
-    this.teleprompter.reset();
-    this.applyZoom(1.0);
-    this.setSpeed(CONFIG.TELEPROMPTER.DEFAULT_SPEED);
-  }
-  
-  setupAutoSave() {
-    // Auto-save ogni 30 secondi
-    setInterval(() => {
-      this.saveCurrentState();
-    }, 30000);
-  }
-  
-  setupKeyboardShortcuts() {
-    document.addEventListener('keydown', (e) => {
-      // Ctrl/Cmd + S per salvare
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        this.saveCurrentState();
-        NotificationManager.showSuccess('Stato salvato');
-      }
-      
-      // Spazio per toggle teleprompter
-      if (e.code === 'Space' && !e.target.matches('input, textarea, button, [contenteditable]')) {
-        e.preventDefault();
-        this.toggleTeleprompter();
-      }
-      
-      // Esc per chiudere modal
-      if (e.key === 'Escape') {
-        this.closeInstructions();
-      }
-    });
-  }
-  
-  // ===== CORE FUNCTIONS =====
-  
-  saveCurrentState() {
-    try {
-      StorageManager.set('app_state', {
-        qIdx: this.state.qIdx,
-        currentQuestion: this.state.currentQuestion,
-        lastCaptionClean: this.state.lastCaptionClean,
-        totalVideos: this.state.totalVideos,
-        rotationIndex: this.state.rotationIndex,
-        recordingsCount: this.state.recordings.length
-      });
-    } catch (error) {
-      console.error('Errore salvataggio stato:', error);
-    }
-  }
-  
-  goToGestionale() {
-    if (confirm("Vuoi tornare al gestionale? I progressi non salvati potrebbero andare persi.")) {
-      if (this.state.isRecording) {
-        this.videoRecorder.stopRecording();
-      }
-      setTimeout(() => {
-        window.location.href = CONFIG.GESTIONALE_URL;
-      }, 250);
-    }
-  }
-  
-  nextQuestion() {
-    this.state.qIdx = (this.state.qIdx + 1) % CONFIG.QUESTION_BANK.length;
-    this.state.currentQuestion = CONFIG.QUESTION_BANK[this.state.qIdx].q;
-    this.showQuestionInOverlay(this.state.currentQuestion);
-  }
-  
-  showQuestionInOverlay(q) {
-    const overlay = Utilities.$('questionBoxOverlay');
-    if (overlay) {
-      overlay.textContent = q ? q : 'Premi "Nuova domanda".';
-    }
-  }
-  
-  async openChatGPT() {
-    if (!this.state.currentQuestion) {
-      this.nextQuestion();
-    }
-    
-    const payload = this.composeChatGPTInput();
-    const success = await Utilities.copyText(payload);
-    
-    if (success) {
-      window.open(CONFIG.CHATGPT_URL, "_blank", "noopener,noreferrer");
-      NotificationManager.showSuccess("Prompt copiato, aprendo ChatGPT...");
-    } else {
-      NotificationManager.showError("Errore nella copia del prompt");
-    }
-  }
-  
-  composeChatGPTInput() {
-    const q = String(this.state.currentQuestion || "").trim();
-    const data = PropertyManager.getData();
-    const propertyBlock = PropertyManager.dataToText(data);
-    const base = (this.state.promptText || CONFIG.BASE_PROMPT).trim();
-    
-    const inputParts = [];
-    inputParts.push("Dati immobile:");
-    inputParts.push(propertyBlock);
-    inputParts.push("");
-    inputParts.push("Richiesta:");
-    inputParts.push(`👉 ${q || "Crea una descrizione promozionale per questo immobile."}`);
-    
-    return `${base}\n\nInput:\n${inputParts.join("\n")}`.trim();
-  }
-  
-  async pasteAnswer() {
-    try {
-      const text = await Utilities.readClipboardText();
-      const answerBox = Utilities.$('answerBox');
-      if (answerBox) {
-        answerBox.value = text || "";
-        NotificationManager.showSuccess("Testo incollato dalla clipboard");
-      }
-    } catch (error) {
-      console.error('Errore incolla:', error);
-      NotificationManager.showError("Impossibile leggere dalla clipboard. Incolla manualmente.");
-    }
-  }
-  
-  sendToTeleprompter() {
-    const answerBox = Utilities.$('answerBox');
-    const answer = answerBox ? answerBox.value : '';
-    
-    if (!answer.trim()) {
-      NotificationManager.showError("Scrivi o incolla una risposta prima.");
-      return;
-    }
-    
-    const ok = this.teleprompter.applyAnswer(answer);
-    if (ok) {
-      this.setCaptionClean(answer);
-      NotificationManager.showSuccess("Risposta inviata al teleprompter");
-    }
-  }
-  
-  setCaptionClean(clean) {
-    this.state.lastCaptionClean = String(clean || "").trim();
-    const preview = Utilities.$('captionPreview');
-    if (preview) {
-      preview.textContent = this.state.lastCaptionClean || "—";
-    }
-    
-    const rememberCheck = Utilities.$('chkRememberCaption');
-    if (rememberCheck && rememberCheck.checked) {
-      StorageManager.set('caption_clean', this.state.lastCaptionClean);
-    }
-  }
-  
-  captionWithHashtagsIfNeeded(clean) {
-    const c = String(clean || "").trim();
-    if (!c) return "";
-    
-    const lower = c.toLowerCase();
-    if (lower.includes("#immobiliarelasacra") || lower.includes("#josephcretorlab") || lower.includes("#realmediapro")) {
-      return c;
-    }
-    return `${c}\n\n${CONFIG.HIDDEN_HASHTAGS}`.trim();
-  }
-  
-  async copyCaption() {
-    const out = this.captionWithHashtagsIfNeeded(this.state.lastCaptionClean);
-    if (!out) {
-      NotificationManager.showError("Niente da copiare");
-      return;
-    }
-    
-    const success = await Utilities.copyText(out);
-    if (success) {
-      NotificationManager.showSuccess("Caption copiata negli appunti");
-    } else {
-      NotificationManager.showError("Errore nella copia");
-    }
-  }
-  
-  async startTeleRec() {
-    const okCam = await this.videoRecorder.ensureReady();
-    if (!okCam) return;
-    
-    if (!this.state.currentQuestion) {
-      this.nextQuestion();
-    }
-    
-    const answerBox = Utilities.$('answerBox');
-    const ans = answerBox ? answerBox.value.trim() : '';
-    
-    if (!ans) {
-      NotificationManager.showError("Scrivi o incolla una risposta prima di registrare.");
-      return;
-    }
-    
-    this.teleprompter.applyAnswer(ans);
-    this.videoRecorder.startRecording();
-  }
-  
-  applyZoom(value) {
-    this.state.zoomValue = Number(value) || 1;
-    const zoomVal = Utilities.$('zoomVal');
-    if (zoomVal) {
-      zoomVal.textContent = `${this.state.zoomValue.toFixed(1)}x`;
-    }
-    document.documentElement.style.setProperty("--zoom", String(this.state.zoomValue));
-  }
-  
-  setSpeed(seconds) {
-    this.state.teleprompterSeconds = seconds;
-    const speedLabel = Utilities.$('speedLabel');
-    if (speedLabel) {
-      speedLabel.textContent = `Vel: ${seconds}s`;
-    }
-    
-    // Update radio buttons
-    const speeds = {
-      120: Utilities.$('speed120'),
-      105: Utilities.$('speed105'),
-      90: Utilities.$('speed90')
-    };
-    
-    Object.entries(speeds).forEach(([speed, element]) => {
-      if (element) {
-        element.checked = (parseInt(speed) === seconds);
-      }
-    });
-  }
-  
-  toggleTeleprompter() {
-    if (this.state.isTeleprompterRunning) {
-      this.teleprompter.stop();
-      NotificationManager.showInfo("Teleprompter fermato");
-    } else {
-      this.teleprompter.start();
-      NotificationManager.showInfo("Teleprompter avviato");
-    }
-  }
-  
-  downloadVideo() {
-    if (this.state.currentRecIndex < 0 || !this.state.recordings[this.state.currentRecIndex]) {
-      NotificationManager.showError("Seleziona un video dalla lista");
-      return;
-    }
-    
-    const r = this.state.recordings[this.state.currentRecIndex];
-    this.videoRecorder.downloadBlob(r.blob, r.name);
-    NotificationManager.showSuccess(`Download iniziato: ${r.name}`);
-  }
-  
-  lockPromptUI() {
-    const promptBox = Utilities.$('promptBox');
-    const btnSave = Utilities.$('btnSavePrompt');
-    const btnReset = Utilities.$('btnResetPrompt');
-    const pill = Utilities.$('promptStatePill');
-    
-    if (promptBox) promptBox.readOnly = true;
-    if (btnSave) btnSave.disabled = true;
-    if (btnReset) btnReset.disabled = true;
-    if (pill) pill.textContent = "Bloccato";
-  }
-  
-  unlockPromptUI() {
-    const code = Utilities.$('unlockCode')?.value.trim() || '';
-    
-    if (code === CONFIG.UNLOCK_CODE) {
-      const promptBox = Utilities.$('promptBox');
-      const btnSave = Utilities.$('btnSavePrompt');
-      const btnReset = Utilities.$('btnResetPrompt');
-      const pill = Utilities.$('promptStatePill');
-      
-      if (promptBox) promptBox.readOnly = false;
-      if (btnSave) btnSave.disabled = false;
-      if (btnReset) btnReset.disabled = false;
-      if (pill) pill.textContent = "Sbloccato";
-      
-      NotificationManager.showSuccess("Prompt sbloccato per la modifica");
-    } else {
-      NotificationManager.showError("Codice errato");
-      this.lockPromptUI();
-    }
-  }
-  
-  savePrompt() {
-    const promptBox = Utilities.$('promptBox');
-    if (promptBox) {
-      this.state.promptText = promptBox.value || CONFIG.BASE_PROMPT;
-      StorageManager.set('prompt_text', this.state.promptText);
-      this.lockPromptUI();
-      
-      const unlockCode = Utilities.$('unlockCode');
-      if (unlockCode) unlockCode.value = "";
-      
-      NotificationManager.showSuccess("Prompt salvato");
-    }
-  }
-  
-  resetPrompt() {
-    const promptBox = Utilities.$('promptBox');
-    if (promptBox) {
-      promptBox.value = CONFIG.BASE_PROMPT;
-      this.state.promptText = CONFIG.BASE_PROMPT;
-      this.savePrompt();
-      NotificationManager.showInfo("Prompt ripristinato a quello predefinito");
-    }
-  }
-  
-  openInstructions() {
-    const modal = Utilities.$('instructionsModal');
-    if (modal) {
-      modal.classList.add('show');
-      modal.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
-      
-      // Focus trap
-      const closeBtn = Utilities.$('btnCloseInstructions');
-      if (closeBtn) closeBtn.focus();
-    }
-  }
-  
-  closeInstructions() {
-    const modal = Utilities.$('instructionsModal');
-    if (modal) {
-      modal.classList.remove('show');
-      modal.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
-      
-      // Ripristina focus
-      Utilities.$('btnInstructions')?.focus();
-    }
-  }
-  
-  handleVideoUpload(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    
-    if (!file.type.startsWith('video/')) {
-      NotificationManager.showError("Seleziona un file video valido");
-      return;
-    }
-    
-    const url = URL.createObjectURL(file);
-    this.state.totalVideos += 1;
-    
-    const platformNow = "upload";
-    const qNow = String(this.state.currentQuestion || "").trim();
-    const title = `#${String(this.state.totalVideos).padStart(3, "0")} • ${platformNow} • file`;
-    
-    this.state.recordings.unshift({
-      title,
-      name: file.name || `upload_${Utilities.nowStamp()}.mp4`,
-      url,
-      blob: file,
-      question: qNow,
-      captionClean: this.state.lastCaptionClean || "",
-      platform: platformNow
-    });
-    
-    this.state.currentRecIndex = 0;
-    
-    const playback = Utilities.$('playback');
-    if (playback) {
-      playback.src = url;
-      playback.load();
-    }
-    
-    this.recordingManager.renderList();
-    this.recordingManager.updateCounters();
-    
-    // Reset input
-    event.target.value = "";
-    
-    NotificationManager.showSuccess("Video caricato con successo");
+    // Gestionale buttons
+    const goGestionale = () => window.location.href = CONFIG.GESTIONALE_URL;
+    Utilities.$('btnBackTop')?.addEventListener('click', goGestionale);
+    Utilities.$('btnBackBottom')?.addEventListener('click', goGestionale);
   }
 }
 
-// ==========================
-// INITIALIZATION
-// ==========================
-document.addEventListener('DOMContentLoaded', () => {
-  // Inizializza l'applicazione
+// Avvio app
+window.addEventListener('DOMContentLoaded', () => {
   const app = new VideoCreatorApp();
   app.init();
-  
-  // Esponi per debugging (opzionale)
-  window.app = app;
-  
-  // Chiudi modal cliccando fuori
-  const modal = Utilities.$('instructionsModal');
-  if (modal) {
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        app.closeInstructions();
-      }
-    });
-  }
-  
-  // Focus management per accessibilità
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') {
-      // Mantieni focus dentro il modal se aperto
-      if (modal && modal.classList.contains('show')) {
-        const focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-        
-        if (e.shiftKey && document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement.focus();
-        } else if (!e.shiftKey && document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement.focus();
-        }
-      }
-    }
-  });
-  
-  console.log('Video Creator inizializzato con successo');
 });
 </script>
+
 </body>
 </html>
