@@ -1,1025 +1,1447 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Teleprompter Immobili</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        body {
-            background: #0f172a;
-            color: #f1f5f9;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-        }
-        
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 20px;
-            background: #1e293b;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: 700;
-            color: #60a5fa;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .funcionario-info {
-            background: #3b82f6;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .funcionario-info .number {
-            font-weight: 700;
-            background: white;
-            color: #3b82f6;
-            padding: 2px 8px;
-            border-radius: 10px;
-        }
-        
-        .main-container {
-            display: flex;
-            gap: 20px;
-            flex: 1;
-        }
-        
-        .controls {
-            width: 350px;
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-        
-        .video-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .video-preview {
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 20px;
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-        
-        .teleprompter-section {
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 20px;
-            height: 300px;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-        }
-        
-        .section-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #94a3b8;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        label {
-            display: block;
-            font-size: 14px;
-            color: #cbd5e1;
-            margin-bottom: 5px;
-        }
-        
-        input, select, textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 8px;
-            border: 1px solid #334155;
-            background: #0f172a;
-            color: #f1f5f9;
-            font-size: 14px;
-        }
-        
-        textarea {
-            resize: vertical;
-            min-height: 100px;
-            font-family: monospace;
-        }
-        
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #3b82f6;
-        }
-        
-        .btn {
-            padding: 12px 20px;
-            border-radius: 8px;
-            border: none;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        
-        .btn-secondary {
-            background: #475569;
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            background: #64748b;
-        }
-        
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
-        
-        .btn-success:hover {
-            background: #059669;
-        }
-        
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background: #dc2626;
-        }
-        
-        .buttons-row {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .caption-container {
-            background: #0f172a;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 10px;
-            border: 1px solid #334155;
-            min-height: 150px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        .caption-text {
-            white-space: pre-line;
-            font-size: 14px;
-            line-height: 1.5;
-            color: #cbd5e1;
-        }
-        
-        /* VIDEO PREVIEW STYLES */
-        .video-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            z-index: 10;
-        }
-        
-        .social-widget {
-            display: flex;
-            gap: 20px;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 15px;
-            border-radius: 12px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .social-button {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .social-button:hover {
-            transform: scale(1.1);
-        }
-        
-        .social-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        
-        .like-icon {
-            background: #ef4444;
-            color: white;
-        }
-        
-        .share-icon {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .call-icon {
-            background: #10b981;
-            color: white;
-        }
-        
-        .social-text {
-            font-size: 12px;
-            color: #cbd5e1;
-        }
-        
-        .animated-dots {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 15px;
-            border-radius: 12px;
-            backdrop-filter: blur(5px);
-        }
-        
-        .dots-container {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #3b82f6;
-            animation: pulse 1.5s infinite;
-        }
-        
-        .dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        
-        .dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        
-        .dot:nth-child(4) {
-            animation-delay: 0.6s;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.3; transform: scale(0.8); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-        
-        .timer-display {
-            font-size: 32px;
-            font-weight: 700;
-            color: white;
-            text-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
-            margin-top: 10px;
-        }
-        
-        .property-info {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(15, 23, 42, 0.95);
-            padding: 15px;
-            border-radius: 12px;
-            backdrop-filter: blur(5px);
-            border: 2px solid #3b82f6;
-            max-width: 300px;
-        }
-        
-        .property-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #60a5fa;
-            margin-bottom: 5px;
-        }
-        
-        .property-price {
-            font-size: 24px;
-            font-weight: 800;
-            color: #10b981;
-            margin-bottom: 10px;
-        }
-        
-        .property-type {
-            font-size: 16px;
-            color: #cbd5e1;
-            margin-bottom: 10px;
-            padding: 5px 10px;
-            background: rgba(59, 130, 246, 0.2);
-            border-radius: 6px;
-            display: inline-block;
-        }
-        
-        .camera-button {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #3b82f6;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
-            transition: all 0.2s;
-            z-index: 20;
-        }
-        
-        .camera-button:hover {
-            background: #2563eb;
-            transform: scale(1.05);
-        }
-        
-        .recording-indicator {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(239, 68, 68, 0.9);
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        
-        .rec-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: white;
-            animation: blink 1s infinite;
-        }
-        
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-        
-        .caption-display {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: rgba(15, 23, 42, 0.9);
-            padding: 10px 0;
-            overflow: hidden;
-            border-top: 2px solid #3b82f6;
-        }
-        
-        .caption-scroll {
-            display: flex;
-            white-space: nowrap;
-            animation: scrollCaption 30s linear infinite;
-            padding: 5px 0;
-        }
-        
-        @keyframes scrollCaption {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
-        
-        .caption-item {
-            display: inline-block;
-            padding: 0 30px;
-            font-size: 18px;
-            font-weight: 500;
-            color: #3b82f6;
-            text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-        }
-        
-        /* TELEPROMPTER STYLES */
-        .teleprompter-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .teleprompter-textarea {
-            flex: 1;
-            background: #0f172a;
-            border-radius: 8px;
-            padding: 15px;
-            border: 1px solid #334155;
-            font-size: 16px;
-            line-height: 1.6;
-            color: #f1f5f9;
-            resize: none;
-            min-height: 150px;
-        }
-        
-        .teleprompter-display {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80%;
-            max-height: 70%;
-            overflow-y: auto;
-            padding: 30px;
-            background: rgba(15, 23, 42, 0.95);
-            border-radius: 12px;
-            border: 3px solid #3b82f6;
-            font-size: 28px;
-            line-height: 1.8;
-            text-align: center;
-            color: #f1f5f9;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
-            z-index: 100;
-        }
-        
-        .teleprompter-display h3 {
-            color: #60a5fa;
-            margin-bottom: 20px;
-            font-size: 24px;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        .status-bar {
-            margin-top: 20px;
-            padding: 12px;
-            background: #1e293b;
-            border-radius: 8px;
-            font-size: 14px;
-            color: #94a3b8;
-            text-align: center;
-        }
-        
-        .controls-footer {
-            margin-top: auto;
-            padding-top: 15px;
-            border-top: 1px solid #334155;
-        }
-    </style>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Personal Brand Teleprompter</title>
+
+  <style>
+    :root {
+      --bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --primary: #8b5cf6;
+      --primary-glow: rgba(139, 92, 246, 0.25);
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --surface: rgba(30, 41, 59, 0.7);
+      --border: rgba(255,255,255,0.12);
+      --radius: 16px;
+      --shadow: 0 20px 40px rgba(0,0,0,0.3);
+      --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --tele-font: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .wrapper {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* HEADER */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 15px 20px;
+      border-radius: var(--radius);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 18px;
+      color: var(--text);
+    }
+    .brand-icon {
+      font-size: 24px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(255,255,255,0.08);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      border-color: var(--primary);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #7c3aed);
+      color: white;
+      border: none;
+    }
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: white;
+      border: none;
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      color: white;
+      border: none;
+    }
+
+    .stats {
+      display: flex;
+      gap: 15px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+    }
+
+    /* MAIN LAYOUT */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 25px;
+    }
+    @media (max-width: 1100px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* TELEPROMPTER SECTION */
+    .teleprompter-section {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 25px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .section-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin: 0 0 20px 0;
+      font-weight: 800;
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 9/16;
+      background: #000;
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-bottom: 20px;
+      border: 2px solid rgba(255,255,255,0.1);
+    }
+
+    #cameraFeed {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .question-display {
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid rgba(255,255,255,0.15);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.4;
+      text-align: center;
+      margin-bottom: auto;
+    }
+
+    .teleprompter-display {
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(15px);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      font-size: var(--tele-font);
+      line-height: 1.6;
+      font-weight: 600;
+      max-height: 40%;
+      overflow-y: auto;
+      margin-top: 15px;
+    }
+    .teleprompter-display::-webkit-scrollbar {
+      width: 6px;
+    }
+    .teleprompter-display::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+      border-radius: 3px;
+    }
+    .teleprompter-display::-webkit-scrollbar-thumb {
+      background: var(--primary);
+      border-radius: 3px;
+    }
+
+    .highlight-word {
+      background: rgba(139, 92, 246, 0.3);
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: background 0.3s ease;
+    }
+
+    /* CONTROLS */
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 25px;
+      padding: 20px;
+      background: rgba(255,255,255,0.03);
+      border-radius: var(--radius);
+    }
+
+    .recording-controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .rec-button {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      color: white;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 30px rgba(239, 68, 68, 0.3);
+      transition: all 0.3s ease;
+    }
+    .rec-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 15px 40px rgba(239, 68, 68, 0.4);
+    }
+    .rec-button.recording {
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .control-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .slider-group input[type="range"] {
+      width: 150px;
+      accent-color: var(--primary);
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 25px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .response-input {
+      width: 100%;
+      min-height: 180px;
+      padding: 15px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-size: 14px;
+      resize: vertical;
+      font-family: var(--sans);
+    }
+    .response-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .caption-preview {
+      background: rgba(255,255,255,0.03);
+      border-radius: 12px;
+      padding: 15px;
+      font-size: 13px;
+      line-height: 1.5;
+      min-height: 100px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .video-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .video-item {
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+    .video-item:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: var(--border);
+      transform: translateX(5px);
+    }
+    .video-item.active {
+      background: rgba(139, 92, 246, 0.15);
+      border-color: var(--primary);
+    }
+
+    .video-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 5px;
+    }
+
+    /* MODAL */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(10px);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .close-modal {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .question-list {
+      max-height: 400px;
+      overflow-y: auto;
+      margin: 20px 0;
+    }
+
+    .question-item {
+      padding: 15px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+    .question-item:hover {
+      background: rgba(139, 92, 246, 0.15);
+      border-color: var(--primary);
+      transform: translateX(5px);
+    }
+
+    /* UTILITY */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .timer {
+      font-family: monospace;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--muted);
+    }
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+
+    /* FOOTER */
+    .footer-bar {
+      margin-top: 40px;
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
 </head>
+
 <body>
-    <div class="header">
-        <div class="logo">
-            <i class="fas fa-home"></i>
-            RealEstate Teleprompter
-        </div>
-        <div class="funcionario-info">
-            <i class="fas fa-user-tie"></i>
-            Funzionario: <span class="number">+39 333 123 4567</span>
-        </div>
+<div class="wrapper">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="brand">
+      <span class="brand-icon">🎬</span>
+      <span>Personal Brand Teleprompter</span>
     </div>
     
-    <div class="main-container">
-        <div class="controls">
-            <div>
-                <div class="section-title">
-                    <i class="fas fa-building"></i>
-                    DATI IMMOBILE
-                </div>
-                
-                <div class="form-group">
-                    <label for="propertyName">Nome visualizzato</label>
-                    <input type="text" id="propertyName" placeholder="Es: Trilocale Luminoso">
-                </div>
-                
-                <div class="buttons-row">
-                    <div class="form-group" style="flex:1">
-                        <label for="propertyType">Tipologia</label>
-                        <select id="propertyType">
-                            <option value="appartamento">Appartamento</option>
-                            <option value="villetta">Villetta</option>
-                            <option value="attico">Attico</option>
-                            <option value="loft">Loft</option>
-                            <option value="studio">Studio</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" style="flex:1">
-                        <label for="propertyPrice">Prezzo (€)</label>
-                        <input type="number" id="propertyPrice" placeholder="250000">
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label for="propertySize">Metri Quadri (mq)</label>
-                    <input type="number" id="propertySize" placeholder="Es: 85">
-                </div>
-                
-                <div class="form-group">
-                    <label for="propertyFloor">Piano</label>
-                    <input type="text" id="propertyFloor" placeholder="Es: 2° / rialzato / terra">
-                </div>
-                
-                <div class="form-group">
-                    <label for="propertyRooms">Locali</label>
-                    <input type="text" id="propertyRooms" placeholder="Es: 3 / bilocale / trilocale">
-                </div>
-                
-                <div class="form-group">
-                    <label for="propertyBathrooms">Bagno/i</label>
-                    <input type="text" id="propertyBathrooms" placeholder="Es: 1 / 2 / 1 finestrato">
-                </div>
-                
-                <button class="btn btn-primary" id="generateCaption">
-                    <i class="fas fa-sync-alt"></i> Genera Caption
-                </button>
-            </div>
-            
-            <div class="caption-container">
-                <div class="section-title">
-                    <i class="fas fa-align-left"></i>
-                    CAPTION GENERATA
-                </div>
-                <div class="caption-text" id="captionOutput"></div>
-            </div>
-            
-            <div class="buttons-row">
-                <button class="btn btn-secondary" id="copyCaption">
-                    <i class="far fa-copy"></i> Copia Caption
-                </button>
-                <button class="btn btn-success" id="newQuestion">
-                    <i class="fas fa-question-circle"></i> Nuova Domanda
-                </button>
-            </div>
-            
-            <div class="controls-footer">
-                <button class="btn btn-danger" id="startTeleprompter">
-                    <i class="fas fa-play"></i> Teleprompter + REC (120s)
-                </button>
-            </div>
-        </div>
-        
-        <div class="video-section">
-            <div class="video-preview" id="videoPreview">
-                <!-- Animated Dots e Timer -->
-                <div class="animated-dots">
-                    <div class="dots-container">
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                        <div class="dot"></div>
-                    </div>
-                    <div class="timer-display" id="timerDisplay">02:00</div>
-                </div>
-                
-                <!-- Social Widget -->
-                <div class="social-widget">
-                    <div class="social-button" id="likeButton">
-                        <div class="social-icon like-icon">
-                            <i class="fas fa-heart"></i>
-                        </div>
-                        <div class="social-text">Metti Like</div>
-                    </div>
-                    
-                    <div class="social-button" id="shareButton">
-                        <div class="social-icon share-icon">
-                            <i class="fas fa-share-alt"></i>
-                        </div>
-                        <div class="social-text">Condividi</div>
-                    </div>
-                    
-                    <div class="social-button" id="callButton">
-                        <div class="social-icon call-icon">
-                            <i class="fas fa-phone-alt"></i>
-                        </div>
-                        <div class="social-text">Chiamami</div>
-                    </div>
-                </div>
-                
-                <!-- Property Info -->
-                <div class="property-info">
-                    <div class="property-title" id="displayPropertyName">Trilocale Luminoso</div>
-                    <div class="property-price" id="displayPropertyPrice">€ 250.000</div>
-                    <div class="property-type" id="displayPropertyType">Appartamento</div>
-                </div>
-                
-                <!-- Camera Button -->
-                <div class="camera-button" id="cameraButton">
-                    <i class="fas fa-camera"></i>
-                </div>
-                
-                <!-- Recording Indicator -->
-                <div class="recording-indicator hidden" id="recordingIndicator">
-                    <div class="rec-dot"></div>
-                    <span>REC</span>
-                </div>
-                
-                <!-- Scrolling Caption -->
-                <div class="caption-display">
-                    <div class="caption-scroll" id="captionScroll">
-                        <!-- La caption scorrerà qui -->
-                    </div>
-                </div>
-                
-                <!-- Teleprompter Display -->
-                <div class="teleprompter-display hidden" id="teleprompterDisplay">
-                    <!-- Il testo del teleprompter apparirà qui -->
-                </div>
-            </div>
-            
-            <div class="teleprompter-section">
-                <div class="section-title">
-                    <i class="fas fa-scroll"></i>
-                    TELEPROMPTER
-                </div>
-                <div class="teleprompter-controls">
-                    <button class="btn btn-secondary" id="pasteAnswer">
-                        <i class="fas fa-paste"></i> Incolla Risposta
-                    </button>
-                    <button class="btn btn-primary" id="showTeleprompter">
-                        <i class="fas fa-eye"></i> Mostra Teleprompter
-                    </button>
-                </div>
-                <textarea class="teleprompter-textarea" id="teleprompterTextarea" placeholder="Incolla qui la risposta da ChatGPT o scrivi manualmente..."></textarea>
-            </div>
-        </div>
-    </div>
-    
-    <div class="status-bar" id="statusBar">
-        Sistema pronto. Inserisci i dati dell'immobile e genera la caption.
+    <div class="action-buttons">
+      <button class="btn btn-primary" id="newQuestionBtn">
+        <span>✨</span> Nuova Domanda
+      </button>
+      <button class="btn" id="openChatGPTBtn">
+        <span>🤖</span> Apri ChatGPT
+      </button>
+      <button class="btn" id="pasteAnswerBtn">
+        <span>📋</span> Incolla Risposta
+      </button>
+      <button class="btn btn-success" id="useAnswerBtn">
+        <span>➡️</span> Usa nel Teleprompter
+      </button>
+      <button class="btn" id="copyCaptionBtn">
+        <span>📝</span> Copia Caption
+      </button>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elementi DOM
-            const generateCaptionBtn = document.getElementById('generateCaption');
-            const copyCaptionBtn = document.getElementById('copyCaption');
-            const newQuestionBtn = document.getElementById('newQuestion');
-            const startTeleprompterBtn = document.getElementById('startTeleprompter');
-            const pasteAnswerBtn = document.getElementById('pasteAnswer');
-            const showTeleprompterBtn = document.getElementById('showTeleprompter');
-            const captionOutput = document.getElementById('captionOutput');
-            const captionScroll = document.getElementById('captionScroll');
-            const teleprompterTextarea = document.getElementById('teleprompterTextarea');
-            const teleprompterDisplay = document.getElementById('teleprompterDisplay');
-            const statusBar = document.getElementById('statusBar');
-            const timerDisplay = document.getElementById('timerDisplay');
-            const recordingIndicator = document.getElementById('recordingIndicator');
-            const cameraButton = document.getElementById('cameraButton');
-            
-            // Elementi per i dati dell'immobile
-            const propertyNameInput = document.getElementById('propertyName');
-            const propertyTypeInput = document.getElementById('propertyType');
-            const propertyPriceInput = document.getElementById('propertyPrice');
-            const propertySizeInput = document.getElementById('propertySize');
-            const propertyFloorInput = document.getElementById('propertyFloor');
-            const propertyRoomsInput = document.getElementById('propertyRooms');
-            const propertyBathroomsInput = document.getElementById('propertyBathrooms');
-            
-            // Elementi per la visualizzazione nel video
-            const displayPropertyName = document.getElementById('displayPropertyName');
-            const displayPropertyPrice = document.getElementById('displayPropertyPrice');
-            const displayPropertyType = document.getElementById('displayPropertyType');
-            
-            // Variabili di stato
-            let isRecording = false;
-            let timerInterval = null;
-            let timeLeft = 120; // 120 secondi = 2 minuti
-            
-            // Aggiorna la visualizzazione dell'immobile nel video
-            function updatePropertyDisplay() {
-                if (propertyNameInput.value) {
-                    displayPropertyName.textContent = propertyNameInput.value;
-                }
-                
-                if (propertyPriceInput.value) {
-                    const price = parseInt(propertyPriceInput.value).toLocaleString('it-IT');
-                    displayPropertyPrice.textContent = `€ ${price}`;
-                }
-                
-                if (propertyTypeInput.value) {
-                    // Capitalizza la prima lettera
-                    const type = propertyTypeInput.value;
-                    displayPropertyType.textContent = type.charAt(0).toUpperCase() + type.slice(1);
-                }
-            }
-            
-            // Aggiorna i campi dell'immobile quando cambiano
-            propertyNameInput.addEventListener('input', updatePropertyDisplay);
-            propertyPriceInput.addEventListener('input', updatePropertyDisplay);
-            propertyTypeInput.addEventListener('change', updatePropertyDisplay);
-            
-            // Genera la caption
-            generateCaptionBtn.addEventListener('click', function() {
-                // Ottieni i valori dai campi
-                const propertyName = propertyNameInput.value || "Immobile di prestigio";
-                const propertyType = propertyTypeInput.value ? 
-                    propertyTypeInput.options[propertyTypeInput.selectedIndex].text : "Appartamento";
-                const propertyPrice = propertyPriceInput.value ? 
-                    `€ ${parseInt(propertyPriceInput.value).toLocaleString('it-IT')}` : "Prezzo su richiesta";
-                const propertySize = propertySizeInput.value ? `${propertySizeInput.value} mq` : "Metratura da definire";
-                const propertyFloor = propertyFloorInput.value || "Piano da definire";
-                const propertyRooms = propertyRoomsInput.value || "Locali da definire";
-                const propertyBathrooms = propertyBathroomsInput.value || "Bagno/i da definire";
-                
-                // Crea la caption
-                const caption = `🏠 ${propertyName} | ${propertyType} | ${propertyPrice}
-📍 ${propertySize} | ${propertyRooms} | ${propertyBathrooms}
-🏢 Piano: ${propertyFloor}
-📞 Contatta il funzionario: +39 333 123 4567`;
-                
-                // Mostra la caption nell'area di testo
-                captionOutput.textContent = caption;
-                
-                // Prepara la caption per lo scorrimento orizzontale
-                const scrollCaption = caption.replace(/\n/g, ' | ');
-                captionScroll.innerHTML = '';
-                
-                // Aggiungi la caption come elemento scorrevole (ripetuta per effetto continuo)
-                for (let i = 0; i < 3; i++) {
-                    const captionItem = document.createElement('div');
-                    captionItem.className = 'caption-item';
-                    captionItem.textContent = scrollCaption;
-                    captionScroll.appendChild(captionItem);
-                }
-                
-                // Aggiorna la visualizzazione nel video
-                updatePropertyDisplay();
-                
-                // Aggiorna lo status
-                statusBar.textContent = "Caption generata con successo!";
-                statusBar.style.color = "#10b981";
-                
-                // Mostra il tasto per copiare
-                copyCaptionBtn.classList.remove('hidden');
-            });
-            
-            // Copia la caption negli appunti
-            copyCaptionBtn.addEventListener('click', function() {
-                const caption = captionOutput.textContent;
-                
-                if (caption && caption.trim() !== '') {
-                    navigator.clipboard.writeText(caption)
-                        .then(() => {
-                            statusBar.textContent = "Caption copiata negli appunti!";
-                            statusBar.style.color = "#3b82f6";
-                            
-                            // Feedback visivo
-                            copyCaptionBtn.innerHTML = '<i class="fas fa-check"></i> Copiato!';
-                            setTimeout(() => {
-                                copyCaptionBtn.innerHTML = '<i class="far fa-copy"></i> Copia Caption';
-                            }, 2000);
-                        })
-                        .catch(err => {
-                            console.error('Errore nella copia:', err);
-                            statusBar.textContent = "Errore nella copia della caption";
-                            statusBar.style.color = "#ef4444";
-                        });
-                }
-            });
-            
-            // Nuova domanda (simula ChatGPT)
-            newQuestionBtn.addEventListener('click', function() {
-                // Simula una domanda da ChatGPT
-                const questions = [
-                    "Puoi descrivermi le caratteristiche principali di questo immobile?",
-                    "Quali sono i vantaggi dell'ubicazione di questa proprietà?",
-                    "Come si presenta lo stato di manutenzione dell'appartamento?",
-                    "È possibile visitare l'immobile questa settimana?",
-                    "Quali sono le spese condominiali mensili?",
-                    "L'immobile è adatto a una famiglia con bambini?",
-                    "Ci sono agevolazioni per i primi acquirenti?",
-                    "Qual è la storia di questa proprietà?",
-                    "Sono inclusi gli elettrodomestici nella vendita?",
-                    "Quali interventi di manutenzione sono stati effettuati recentemente?"
-                ];
-                
-                const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-                
-                // Inserisci la domanda nel teleprompter
-                teleprompterTextarea.value = `DOMANDA: ${randomQuestion}\n\nRISPOSTA: `;
-                
-                // Focus sul teleprompter
-                teleprompterTextarea.focus();
-                
-                statusBar.textContent = "Nuova domanda generata. Incolla la risposta nel teleprompter.";
-                statusBar.style.color = "#8b5cf6";
-            });
-            
-            // Incolla risposta (simula incolla da ChatGPT)
-            pasteAnswerBtn.addEventListener('click', function() {
-                // Simula una risposta da ChatGPT
-                const answers = [
-                    "Questo immobile presenta numerosi vantaggi tra cui una posizione centrale, luminosità ottimale grazie all'esposizione sud e uno stato di manutenzione eccellente. Recentemente ristrutturato con materiali di alta qualità.",
-                    "La proprietà si trova in una zona residenziale molto tranquilla, a soli 10 minuti a piedi dal centro città. Servita da mezzi pubblici e vicina a scuole, supermercati e parchi.",
-                    "L'appartamento è in ottime condizioni, con impianti elettrici e idraulici completamente rifatti nel 2022. Le finiture sono di pregio con parquet in rovere massello e infissi a taglio termico.",
-                    "Certamente! Possiamo organizzare una visita per giovedì o venerdì pomeriggio. Mi può confermare quale giorno preferisce?",
-                    "Le spese condominiali ammontano a € 120 mensili e includono riscaldamento centralizzato, pulizia scale, manutenzione dell'ascensore e illuminazione comune.",
-                    "Assolutamente sì. La zona è sicura e silenziosa, con un parco giochi a 200 metri e scuole elementari nelle vicinanze. L'appartamento stesso ha una pianta molto funzionale per una famiglia.",
-                    "Sì, per i primi acquirenti under 36 è possibile accedere al mutuo giovane con agevolazioni fiscali e l'esenzione dall'imposta di registro per il 50% del valore.",
-                    "La proprietà è stata costruita nel 2015 da un noto costruttore locale. L'attuale proprietario l'ha acquistata nel 2018 e l'ha mantenuta in condizioni impeccabili.",
-                    "Nella vendita sono inclusi cucina componibile con elettrodomestici (frigorifero, forno, piano cottura), climatizzatori in ogni stanza e tutte le tende oscuranti.",
-                    "Negli ultimi 2 anni sono stati sostituiti il boiler, installati i condizionatori in ogni ambiente, e rifatta la pittura completa di tutti gli interni."
-                ];
-                
-                const randomAnswer = answers[Math.floor(Math.random() * answers.length)];
-                
-                // Se c'è già del testo, aggiungi la risposta
-                if (teleprompterTextarea.value.includes("RISPOSTA:")) {
-                    teleprompterTextarea.value = teleprompterTextarea.value.split("RISPOSTA:")[0] + "RISPOSTA: " + randomAnswer;
-                } else {
-                    teleprompterTextarea.value += randomAnswer;
-                }
-                
-                statusBar.textContent = "Risposta incollata nel teleprompter!";
-                statusBar.style.color = "#10b981";
-            });
-            
-            // Mostra il teleprompter nel video
-            showTeleprompterBtn.addEventListener('click', function() {
-                const text = teleprompterTextarea.value.trim();
-                
-                if (text) {
-                    teleprompterDisplay.innerHTML = `<h3>TELEPROMPTER</h3><div>${text.replace(/\n/g, '<br>')}</div>`;
-                    teleprompterDisplay.classList.remove('hidden');
-                    
-                    statusBar.textContent = "Teleprompter visibile sul video. Premi ESC per nasconderlo.";
-                    statusBar.style.color = "#3b82f6";
-                } else {
-                    statusBar.textContent = "Il teleprompter è vuoto! Inserisci prima del testo.";
-                    statusBar.style.color = "#ef4444";
-                }
-            });
-            
-            // Nascondi teleprompter con ESC
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    teleprompterDisplay.classList.add('hidden');
-                }
-            });
-            
-            // Timer per la registrazione
-            function updateTimer() {
-                timeLeft--;
-                
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                
-                timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                
-                if (timeLeft <= 0) {
-                    stopRecording();
-                }
-            }
-            
-            // Avvia la registrazione
-            function startRecording() {
-                if (isRecording) return;
-                
-                isRecording = true;
-                timeLeft = 120;
-                
-                // Mostra indicatori
-                recordingIndicator.classList.remove('hidden');
-                timerDisplay.textContent = "02:00";
-                
-                // Nascondi il teleprompter dopo 3 secondi
-                setTimeout(() => {
-                    teleprompterDisplay.classList.add('hidden');
-                }, 3000);
-                
-                // Avvia il timer
-                timerInterval = setInterval(updateTimer, 1000);
-                
-                // Aggiorna lo status
-                statusBar.textContent = "Registrazione in corso... Timer di 120 secondi attivo";
-                statusBar.style.color = "#ef4444";
-            }
-            
-            // Ferma la registrazione
-            function stopRecording() {
-                if (!isRecording) return;
-                
-                isRecording = false;
-                
-                // Nascondi indicatori
-                recordingIndicator.classList.add('hidden');
-                
-                // Ferma il timer
-                if (timerInterval) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                }
-                
-                // Ripristina il timer
-                timerDisplay.textContent = "02:00";
-                
-                // Aggiorna lo status
-                statusBar.textContent = "Registrazione completata!";
-                statusBar.style.color = "#10b981";
-            }
-            
-            // Avvia il teleprompter e la registrazione
-            startTeleprompterBtn.addEventListener('click', startRecording);
-            
-            // Bottone fotocamera
-            cameraButton.addEventListener('click', function() {
-                statusBar.textContent = "Foto scattata! (simulazione)";
-                statusBar.style.color = "#3b82f6";
-                
-                // Feedback visivo
-                cameraButton.innerHTML = '<i class="fas fa-check"></i>';
-                cameraButton.style.background = "#10b981";
-                
-                setTimeout(() => {
-                    cameraButton.innerHTML = '<i class="fas fa-camera"></i>';
-                    cameraButton.style.background = "#3b82f6";
-                }, 1500);
-            });
-            
-            // Bottoni social (simulazione)
-            document.getElementById('likeButton').addEventListener('click', function() {
-                statusBar.textContent = "Like aggiunto! (simulazione)";
-                statusBar.style.color = "#ef4444";
-            });
-            
-            document.getElementById('shareButton').addEventListener('click', function() {
-                statusBar.textContent = "Condivisione in corso... (simulazione)";
-                statusBar.style.color = "#3b82f6";
-            });
-            
-            document.getElementById('callButton').addEventListener('click', function() {
-                statusBar.textContent = "Chiamata al funzionario +39 333 123 4567 (simulazione)";
-                statusBar.style.color = "#10b981";
-            });
-            
-            // Inizializza con dati di esempio
-            propertyNameInput.value = "Trilocale Luminoso con Terrazzo";
-            propertyTypeInput.value = "appartamento";
-            propertyPriceInput.value = "250000";
-            propertySizeInput.value = "85";
-            propertyFloorInput.value = "2° piano";
-            propertyRoomsInput.value = "3 locali";
-            propertyBathroomsInput.value = "1 bagno finestrato";
-            
-            // Genera una caption iniziale
-            setTimeout(() => {
-                generateCaptionBtn.click();
-            }, 500);
-        });
-    </script>
+    <div class="stats">
+      <div class="stat-item">
+        <span>🎥</span>
+        <span id="videoCount">Video: 0</span>
+      </div>
+      <div class="stat-item">
+        <span>🚀</span>
+        <span id="platformLabel">Social: TikTok</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT: TELEPROMPTER -->
+    <div class="teleprompter-section">
+      <h2 class="section-title">Teleprompter Live</h2>
+      
+      <div class="video-container">
+        <video id="cameraFeed" autoplay playsinline muted></video>
+        
+        <div class="video-overlay">
+          <div class="question-display" id="questionDisplay">
+            Clicca su "Nuova Domanda" per iniziare
+          </div>
+          
+          <div class="teleprompter-display" id="teleprompterText">
+            La tua risposta apparirà qui. <br>
+            Usa il tasto "Usa nel Teleprompter" per caricarla.
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="controls-row">
+        <div class="recording-controls">
+          <button class="rec-button" id="recButton">
+            REC
+          </button>
+          <div class="control-group">
+            <button class="btn" id="cameraBtn">
+              <span>📷</span> Camera
+            </button>
+            <button class="btn" id="flipBtn">
+              <span>🔄</span> Gira
+            </button>
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <span>Velocità:</span>
+          <input type="range" id="speedSlider" min="50" max="200" value="100">
+          <span id="speedValue">100%</span>
+        </div>
+
+        <div class="slider-group">
+          <span>Zoom:</span>
+          <input type="range" id="zoomSlider" min="100" max="200" value="100">
+          <span id="zoomValue">1.0x</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SIDEBAR -->
+    <div class="sidebar">
+      
+      <!-- RESPONSE INPUT -->
+      <div class="card">
+        <h2 class="section-title">Risposta da ChatGPT</h2>
+        <textarea class="response-input" id="responseInput" 
+                  placeholder="Incolla qui la risposta da ChatGPT o scrivi il tuo testo..."></textarea>
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+          <button class="btn" id="clearTextBtn">🗑️ Pulisci</button>
+          <button class="btn" id="startTeleprompterBtn">▶️ Avvia Scorrimento</button>
+          <button class="btn" id="pauseTeleprompterBtn">⏸️ Pausa</button>
+        </div>
+      </div>
+
+      <!-- CAPTION -->
+      <div class="card">
+        <h2 class="section-title">Caption per Social</h2>
+        <div class="caption-preview" id="captionPreview">
+          La caption verrà generata automaticamente dal testo.
+        </div>
+        <div style="margin-top: 15px;">
+          <label class="chk">
+            <input type="checkbox" id="autoHashtags" checked> 
+            <span>Aggiungi hashtag automatici</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- VIDEO LIBRARY -->
+      <div class="card">
+        <h2 class="section-title">Video Creati</h2>
+        <div class="video-list" id="videoList">
+          <div class="empty-state">
+            <div class="empty-state-icon">🎥</div>
+            <p>Nessun video ancora creato</p>
+          </div>
+        </div>
+        <div style="margin-top: 15px; display: flex; gap: 10px;">
+          <button class="btn" id="playSelectedBtn">▶️ Riproduci</button>
+          <button class="btn" id="downloadSelectedBtn">📥 Scarica</button>
+        </div>
+      </div>
+
+      <!-- SOCIAL PLATFORM -->
+      <div class="card">
+        <h2 class="section-title">Piattaforma Social</h2>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button class="btn platform-btn active" data-platform="tiktok">TikTok</button>
+          <button class="btn platform-btn" data-platform="instagram">Instagram</button>
+          <button class="btn platform-btn" data-platform="youtube">YouTube Shorts</button>
+          <button class="btn platform-btn" data-platform="linkedin">LinkedIn</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer-bar">
+    <p>Personal Brand Teleprompter • Crea contenuti coinvolgenti per i tuoi social • Vai oltre i semplici video</p>
+  </div>
+</div>
+
+<!-- MODAL FOR QUESTIONS -->
+<div class="modal" id="questionsModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">📚 Libreria Domande</h2>
+      <button class="close-modal" id="closeModalBtn">×</button>
+    </div>
+    <p>Scegli una domanda da cui iniziare il tuo video:</p>
+    <div class="question-list" id="questionsList">
+      <!-- Questions will be loaded here -->
+    </div>
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button class="btn" id="randomQuestionBtn">🎲 Domanda Casuale</button>
+      <button class="btn btn-primary" id="selectQuestionBtn">Seleziona</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIDEO PLAYER MODAL -->
+<div class="modal" id="videoModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title" id="videoModalTitle">Anteprima Video</h2>
+      <button class="close-modal" id="closeVideoModalBtn">×</button>
+    </div>
+    <video id="videoPlayer" controls style="width: 100%; border-radius: 12px;"></video>
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+      <button class="btn btn-primary" id="downloadVideoBtn">📥 Scarica Video</button>
+      <button class="btn" id="shareVideoBtn">🔗 Condividi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ================= CONFIGURATION =================
+const CONFIG = {
+  chatGPTUrl: "https://chat.openai.com/",
+  defaultSpeed: 100, // percentage
+  recordingDuration: 60, // seconds
+  platforms: ['tiktok', 'instagram', 'youtube', 'linkedin'],
+  hashtags: {
+    personalbranding: [
+      "#PersonalBranding", "#BrandPersonale", "#CostruzioneMarca", "#MarcaPersonale",
+      "#AutoritàDigitale", "#EspertoDelSettore", "#ContentStrategy", "#SocialMediaTips"
+    ],
+    business: [
+      "#BusinessTips", "#Imprenditoria", "#StrategiaDigitale", "#MarketingDigitale",
+      "#CrescitaProfessionale", "#Networking", "#Successo", "#Mindset"
+    ],
+    motivation: [
+      "#Motivazione", "#CrescitaPersonale", "#SviluppoPersonale", "#Obiettivi",
+      "#Produttività", "#MindsetVincente", "#SuperareSfide", "#MentalitàDiSuccesso"
+    ]
+  }
+};
+
+// ================= STATE MANAGEMENT =================
+let state = {
+  currentQuestion: null,
+  currentResponse: '',
+  isRecording: false,
+  isTeleprompterRunning: false,
+  teleprompterPosition: 0,
+  teleprompterSpeed: CONFIG.defaultSpeed,
+  selectedPlatform: 'tiktok',
+  videos: [],
+  cameraActive: false,
+  cameraStream: null,
+  recorder: null,
+  recordingChunks: [],
+  currentVideoIndex: -1
+};
+
+// ================= DOM ELEMENTS =================
+const elements = {
+  // Buttons
+  newQuestionBtn: document.getElementById('newQuestionBtn'),
+  openChatGPTBtn: document.getElementById('openChatGPTBtn'),
+  pasteAnswerBtn: document.getElementById('pasteAnswerBtn'),
+  useAnswerBtn: document.getElementById('useAnswerBtn'),
+  copyCaptionBtn: document.getElementById('copyCaptionBtn'),
+  recButton: document.getElementById('recButton'),
+  cameraBtn: document.getElementById('cameraBtn'),
+  flipBtn: document.getElementById('flipBtn'),
+  clearTextBtn: document.getElementById('clearTextBtn'),
+  startTeleprompterBtn: document.getElementById('startTeleprompterBtn'),
+  pauseTeleprompterBtn: document.getElementById('pauseTeleprompterBtn'),
+  playSelectedBtn: document.getElementById('playSelectedBtn'),
+  downloadSelectedBtn: document.getElementById('downloadSelectedBtn'),
+  
+  // Inputs
+  responseInput: document.getElementById('responseInput'),
+  speedSlider: document.getElementById('speedSlider'),
+  zoomSlider: document.getElementById('zoomSlider'),
+  autoHashtags: document.getElementById('autoHashtags'),
+  
+  // Displays
+  questionDisplay: document.getElementById('questionDisplay'),
+  teleprompterText: document.getElementById('teleprompterText'),
+  captionPreview: document.getElementById('captionPreview'),
+  videoList: document.getElementById('videoList'),
+  videoCount: document.getElementById('videoCount'),
+  platformLabel: document.getElementById('platformLabel'),
+  speedValue: document.getElementById('speedValue'),
+  zoomValue: document.getElementById('zoomValue'),
+  
+  // Camera
+  cameraFeed: document.getElementById('cameraFeed'),
+  
+  // Modals
+  questionsModal: document.getElementById('questionsModal'),
+  questionsList: document.getElementById('questionsList'),
+  closeModalBtn: document.getElementById('closeModalBtn'),
+  randomQuestionBtn: document.getElementById('randomQuestionBtn'),
+  selectQuestionBtn: document.getElementById('selectQuestionBtn'),
+  videoModal: document.getElementById('videoModal'),
+  videoPlayer: document.getElementById('videoPlayer'),
+  closeVideoModalBtn: document.getElementById('closeVideoModalBtn'),
+  downloadVideoBtn: document.getElementById('downloadVideoBtn'),
+  shareVideoBtn: document.getElementById('shareVideoBtn'),
+  videoModalTitle: document.getElementById('videoModalTitle')
+};
+
+// ================= QUESTION BANK =================
+const QUESTIONS = [
+  {
+    category: "Personal Branding",
+    questions: [
+      "Come hai costruito la tua autorevolezza nel settore?",
+      "Qual è il segreto per essere riconoscibili sui social?",
+      "Come trasformare la propria passione in una professione?",
+      "Qual è l'errore più comune che vedi nel personal branding?",
+      "Come superare la paura di esporsi online?",
+      "Qual è il primo step per creare un personal branding efficace?"
+    ]
+  },
+  {
+    category: "Business",
+    questions: [
+      "Qual è la strategia di pricing più efficace per i servizi?",
+      "Come trovare i clienti ideali senza spendere in pubblicità?",
+      "Qual è la skill più sottovalutata per fare business oggi?",
+      "Come scalare un'attività senza perdere qualità?",
+      "Qual è il miglior consiglio per chi inizia un business?",
+      "Come differenziarsi dalla concorrenza in un mercato saturo?"
+    ]
+  },
+  {
+    category: "Mindset",
+    questions: [
+      "Come mantenere la costanza quando non si vedono risultati?",
+      "Qual è la tua routine mattutina per la produttività?",
+      "Come gestire il burnout quando si lavora su se stessi?",
+      "Qual è il mindset che ti ha aiutato di più nel tuo percorso?",
+      "Come superare l'ansia da prestazione sui social?",
+      "Qual è l'abitudine che ha cambiato radicalmente la tua vita?"
+    ]
+  },
+  {
+    category: "Content Creation",
+    questions: [
+      "Come trovare idee per contenuti quando sei a secco?",
+      "Qual è il formato di contenuto più efficace per coinvolgere?",
+      "Come aumentare la retention nei tuoi video?",
+      "Qual è il segreto per un hook perfetto?",
+      "Come bilanciare contenuto di valore e intrattenimento?",
+      "Qual è la metrica più importante da monitorare?"
+    ]
+  },
+  {
+    category: "Networking",
+    questions: [
+      "Come costruire relazioni autentiche nel tuo settore?",
+      "Qual è il modo migliore per approcciare un esperto?",
+      "Come trasformare un contatto in una collaborazione?",
+      "Qual è l'errore da evitare nel networking online?",
+      "Come mantenere vive le relazioni professionali?",
+      "Dove trovare le persone giuste con cui connetterti?"
+    ]
+  }
+];
+
+// ================= INITIALIZATION =================
+function init() {
+  loadSavedState();
+  setupEventListeners();
+  updateUI();
+  generateQuestionsList();
+}
+
+function loadSavedState() {
+  const saved = localStorage.getItem('teleprompterState');
+  if (saved) {
+    const parsed = JSON.parse(saved);
+    state = { ...state, ...parsed };
+    state.videos = state.videos || [];
+  }
+  
+  // Load videos from localStorage
+  const savedVideos = localStorage.getItem('teleprompterVideos');
+  if (savedVideos) {
+    state.videos = JSON.parse(savedVideos);
+    updateVideoList();
+  }
+}
+
+function saveState() {
+  const toSave = {
+    currentResponse: state.currentResponse,
+    selectedPlatform: state.selectedPlatform,
+    teleprompterSpeed: state.teleprompterSpeed,
+    videos: state.videos
+  };
+  localStorage.setItem('teleprompterState', JSON.stringify(toSave));
+  localStorage.setItem('teleprompterVideos', JSON.stringify(state.videos));
+}
+
+// ================= EVENT LISTENERS =================
+function setupEventListeners() {
+  // Question Management
+  elements.newQuestionBtn.addEventListener('click', showQuestionsModal);
+  elements.openChatGPTBtn.addEventListener('click', openChatGPT);
+  elements.pasteAnswerBtn.addEventListener('click', pasteFromClipboard);
+  elements.useAnswerBtn.addEventListener('click', useResponseInTeleprompter);
+  elements.copyCaptionBtn.addEventListener('click', copyCaption);
+  
+  // Camera & Recording
+  elements.cameraBtn.addEventListener('click', toggleCamera);
+  elements.flipBtn.addEventListener('click', flipCamera);
+  elements.recButton.addEventListener('click', toggleRecording);
+  
+  // Teleprompter Controls
+  elements.clearTextBtn.addEventListener('click', clearResponse);
+  elements.startTeleprompterBtn.addEventListener('click', startTeleprompter);
+  elements.pauseTeleprompterBtn.addEventListener('click', pauseTeleprompter);
+  
+  // Settings
+  elements.speedSlider.addEventListener('input', updateSpeed);
+  elements.zoomSlider.addEventListener('input', updateZoom);
+  elements.autoHashtags.addEventListener('change', updateCaption);
+  
+  // Platform Selection
+  document.querySelectorAll('.platform-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      state.selectedPlatform = e.target.dataset.platform;
+      updatePlatformLabel();
+      saveState();
+    });
+  });
+  
+  // Video Management
+  elements.playSelectedBtn.addEventListener('click', playSelectedVideo);
+  elements.downloadSelectedBtn.addEventListener('click', downloadSelectedVideo);
+  
+  // Modal Controls
+  elements.closeModalBtn.addEventListener('click', () => elements.questionsModal.classList.remove('active'));
+  elements.closeVideoModalBtn.addEventListener('click', () => elements.videoModal.classList.remove('active'));
+  elements.randomQuestionBtn.addEventListener('click', selectRandomQuestion);
+  elements.selectQuestionBtn.addEventListener('click', selectCurrentQuestion);
+  elements.downloadVideoBtn.addEventListener('click', downloadCurrentVideo);
+  elements.shareVideoBtn.addEventListener('click', shareCurrentVideo);
+  
+  // Close modals on outside click
+  window.addEventListener('click', (e) => {
+    if (e.target === elements.questionsModal) elements.questionsModal.classList.remove('active');
+    if (e.target === elements.videoModal) elements.videoModal.classList.remove('active');
+  });
+  
+  // Auto-save on input
+  elements.responseInput.addEventListener('input', (e) => {
+    state.currentResponse = e.target.value;
+    saveState();
+  });
+}
+
+// ================= QUESTION MANAGEMENT =================
+function showQuestionsModal() {
+  elements.questionsModal.classList.add('active');
+}
+
+function generateQuestionsList() {
+  elements.questionsList.innerHTML = '';
+  
+  QUESTIONS.forEach(category => {
+    const categoryHeader = document.createElement('div');
+    categoryHeader.style.cssText = `
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin: 20px 0 10px 0;
+      font-weight: 700;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--border);
+    `;
+    categoryHeader.textContent = category.category;
+    elements.questionsList.appendChild(categoryHeader);
+    
+    category.questions.forEach((question, index) => {
+      const item = document.createElement('div');
+      item.className = 'question-item';
+      item.dataset.category = category.category;
+      item.dataset.index = index;
+      item.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 5px;">${question}</div>
+        <div style="font-size: 11px; color: var(--muted);">${category.category}</div>
+      `;
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.question-item').forEach(q => q.style.background = '');
+        item.style.background = 'rgba(139, 92, 246, 0.15)';
+        state.currentQuestion = { category: category.category, question };
+      });
+      elements.questionsList.appendChild(item);
+    });
+  });
+}
+
+function selectRandomQuestion() {
+  const category = QUESTIONS[Math.floor(Math.random() * QUESTIONS.length)];
+  const question = category.questions[Math.floor(Math.random() * category.questions.length)];
+  state.currentQuestion = { category: category.category, question };
+  
+  // Highlight the selected question
+  document.querySelectorAll('.question-item').forEach(item => {
+    if (item.dataset.category === category.category && 
+        item.querySelector('div').textContent === question) {
+      item.style.background = 'rgba(139, 92, 246, 0.15)';
+      item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      item.style.background = '';
+    }
+  });
+}
+
+function selectCurrentQuestion() {
+  if (state.currentQuestion) {
+    elements.questionDisplay.textContent = state.currentQuestion.question;
+    elements.questionsModal.classList.remove('active');
+    updateCaption();
+  }
+}
+
+// ================= CHATGPT INTEGRATION =================
+function openChatGPT() {
+  const prompt = state.currentQuestion 
+    ? `Crea una risposta coinvolgente per un video social sulla domanda: "${state.currentQuestion.question}"\n\nLa risposta deve essere:\n- In italiano naturale e parlato\n- Durata massima 60 secondi\n- Strutturata per un teleprompter\n- Con hook iniziale forte\n- Con call to action finale\n- Adatta per ${state.selectedPlatform}`
+    : "Crea un testo per un video social sul personal branding";
+  
+  navigator.clipboard.writeText(prompt).then(() => {
+    window.open(CONFIG.chatGPTUrl, '_blank');
+  });
+}
+
+async function pasteFromClipboard() {
+  try {
+    const text = await navigator.clipboard.readText();
+    elements.responseInput.value = text;
+    state.currentResponse = text;
+    saveState();
+  } catch (err) {
+    alert('Non posso accedere agli appunti. Incolla manualmente.');
+  }
+}
+
+function useResponseInTeleprompter() {
+  const response = elements.responseInput.value.trim();
+  if (!response) {
+    alert('Inserisci o incolla una risposta prima.');
+    return;
+  }
+  
+  state.currentResponse = response;
+  elements.teleprompterText.innerHTML = formatTeleprompterText(response);
+  updateCaption();
+  saveState();
+}
+
+// ================= TELEPROMPTER FUNCTIONS =================
+function formatTeleprompterText(text) {
+  return text.split(' ').map(word => 
+    `<span class="teleprompter-word">${word}</span>`
+  ).join(' ');
+}
+
+function startTeleprompter() {
+  if (!state.currentResponse) {
+    alert('Prima inserisci una risposta nel teleprompter.');
+    return;
+  }
+  
+  state.isTeleprompterRunning = true;
+  elements.startTeleprompterBtn.disabled = true;
+  elements.pauseTeleprompterBtn.disabled = false;
+  
+  const words = elements.teleprompterText.querySelectorAll('.teleprompter-word');
+  let currentWord = 0;
+  
+  const interval = setInterval(() => {
+    if (!state.isTeleprompterRunning) {
+      clearInterval(interval);
+      return;
+    }
+    
+    // Remove highlight from previous word
+    if (currentWord > 0) {
+      words[currentWord - 1].classList.remove('highlight-word');
+    }
+    
+    // Highlight current word
+    if (currentWord < words.length) {
+      words[currentWord].classList.add('highlight-word');
+      words[currentWord].scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center',
+        inline: 'center'
+      });
+      currentWord++;
+    } else {
+      // End of text
+      clearInterval(interval);
+      state.isTeleprompterRunning = false;
+      elements.startTeleprompterBtn.disabled = false;
+      elements.pauseTeleprompterBtn.disabled = true;
+    }
+  }, 60000 / (state.teleprompterSpeed * 10)); // Speed adjustment
+}
+
+function pauseTeleprompter() {
+  state.isTeleprompterRunning = false;
+  elements.startTeleprompterBtn.disabled = false;
+  elements.pauseTeleprompterBtn.disabled = true;
+}
+
+function clearResponse() {
+  elements.responseInput.value = '';
+  elements.teleprompterText.innerHTML = 'La tua risposta apparirà qui.';
+  state.currentResponse = '';
+  saveState();
+}
+
+// ================= CAPTION GENERATION =================
+function updateCaption() {
+  if (!state.currentResponse && !state.currentQuestion) return;
+  
+  let caption = '';
+  
+  if (state.currentQuestion) {
+    caption += `💡 ${state.currentQuestion.question}\n\n`;
+  }
+  
+  if (state.currentResponse) {
+    const shortResponse = state.currentResponse.length > 200 
+      ? state.currentResponse.substring(0, 200) + '...' 
+      : state.currentResponse;
+    caption += `${shortResponse}\n\n`;
+  }
+  
+  // Add platform-specific tags
+  switch(state.selectedPlatform) {
+    case 'tiktok':
+      caption += '🎵 Suono originale - ';
+      break;
+    case 'instagram':
+      caption += '👇 Scorri per più contenuti - ';
+      break;
+    case 'youtube':
+      caption += '▶️ Iscriviti per non perderti i prossimi video - ';
+      break;
+    case 'linkedin':
+      caption += '🔔 Seguimi per altri contenuti sul personal branding - ';
+      break;
+  }
+  
+  caption += '@tuoprofilo\n\n';
+  
+  // Add hashtags if enabled
+  if (elements.autoHashtags.checked) {
+    const allHashtags = [
+      ...CONFIG.hashtags.personalbranding,
+      ...CONFIG.hashtags.business,
+      ...CONFIG.hashtags.motivation
+    ];
+    
+    // Select 10-15 random hashtags
+    const shuffled = [...allHashtags].sort(() => 0.5 - Math.random());
+    const selectedHashtags = shuffled.slice(0, 12);
+    
+    caption += selectedHashtags.join(' ') + '\n';
+    
+    // Add platform-specific hashtag
+    switch(state.selectedPlatform) {
+      case 'tiktok': caption += '#TikTokItalia #PerTePage'; break;
+      case 'instagram': caption += '#InstagramIT #ReelsItalia'; break;
+      case 'youtube': caption += '#YouTubeShorts #ShortsItalia'; break;
+      case 'linkedin': caption += '#LinkedInItalia #LinkedInTips'; break;
+    }
+  }
+  
+  elements.captionPreview.textContent = caption;
+}
+
+async function copyCaption() {
+  const caption = elements.captionPreview.textContent;
+  if (!caption || caption === 'La caption verrà generata automaticamente dal testo.') {
+    alert('Genera prima una caption.');
+    return;
+  }
+  
+  try {
+    await navigator.clipboard.writeText(caption);
+    alert('Caption copiata negli appunti!');
+  } catch (err) {
+    alert('Errore nella copia della caption.');
+  }
+}
+
+// ================= CAMERA & RECORDING =================
+async function toggleCamera() {
+  if (!state.cameraActive) {
+    try {
+      const constraints = {
+        video: { 
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: true
+      };
+      
+      state.cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+      elements.cameraFeed.srcObject = state.cameraStream;
+      state.cameraActive = true;
+      elements.cameraBtn.innerHTML = '<span>📷</span> Stop Camera';
+    } catch (err) {
+      alert('Errore nell\'accesso alla camera: ' + err.message);
+    }
+  } else {
+    if (state.cameraStream) {
+      state.cameraStream.getTracks().forEach(track => track.stop());
+      elements.cameraFeed.srcObject = null;
+      state.cameraActive = false;
+      elements.cameraBtn.innerHTML = '<span>📷</span> Camera';
+    }
+  }
+}
+
+async function flipCamera() {
+  if (!state.cameraStream) return;
+  
+  const currentFacingMode = state.cameraStream.getVideoTracks()[0].getSettings().facingMode;
+  const newFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+  
+  // Stop current stream
+  state.cameraStream.getTracks().forEach(track => track.stop());
+  
+  try {
+    const constraints = {
+      video: { 
+        facingMode: newFacingMode,
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: true
+    };
+    
+    state.cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+    elements.cameraFeed.srcObject = state.cameraStream;
+  } catch (err) {
+    alert('Errore nel girare la camera: ' + err.message);
+  }
+}
+
+async function toggleRecording() {
+  if (!state.isRecording) {
+    startRecording();
+  } else {
+    stopRecording();
+  }
+}
+
+async function startRecording() {
+  if (!state.cameraStream) {
+    alert('Attiva prima la camera.');
+    return;
+  }
+  
+  try {
+    state.recordingChunks = [];
+    
+    // Combine camera feed with canvas overlay
+    const canvas = document.createElement('canvas');
+    canvas.width = 1080;
+    canvas.height = 1920;
+    const ctx = canvas.getContext('2d');
+    
+    const videoTrack = state.cameraStream.getVideoTracks()[0];
+    const audioTrack = state.cameraStream.getAudioTracks()[0];
+    
+    const stream = canvas.captureStream(30);
+    if (audioTrack) {
+      stream.addTrack(audioTrack);
+    }
+    
+    state.recorder = new MediaRecorder(stream, {
+      mimeType: 'video/webm;codecs=vp9,opus'
+    });
+    
+    state.recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        state.recordingChunks.push(event.data);
+      }
+    };
+    
+    state.recorder.onstop = () => {
+      const blob = new Blob(state.recordingChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      
+      const videoData = {
+        id: Date.now(),
+        title: state.currentQuestion ? state.currentQuestion.question.substring(0, 50) : 'Video senza titolo',
+        url: url,
+        blob: blob,
+        date: new Date().toLocaleString(),
+        platform: state.selectedPlatform,
+        question: state.currentQuestion?.question || '',
+        caption: elements.captionPreview.textContent
+      };
+      
+      state.videos.unshift(videoData);
+      state.currentVideoIndex = 0;
+      
+      updateVideoList();
+      saveState();
+      
+      // Reset recording state
+      state.isRecording = false;
+      elements.recButton.classList.remove('recording');
+      elements.recButton.textContent = 'REC';
+    };
+    
+    state.recorder.start(1000); // Collect data every second
+    state.isRecording = true;
+    elements.recButton.classList.add('recording');
+    elements.recButton.textContent = '⏹️ STOP';
+    
+    // Start countdown
+    let timeLeft = CONFIG.recordingDuration;
+    const countdown = setInterval(() => {
+      timeLeft--;
+      elements.recButton.textContent = `⏹️ ${timeLeft}s`;
+      
+      if (timeLeft <= 0) {
+        clearInterval(countdown);
+        stopRecording();
+      }
+      
+      if (!state.isRecording) {
+        clearInterval(countdown);
+      }
+    }, 1000);
+    
+  } catch (err) {
+    alert('Errore nella registrazione: ' + err.message);
+  }
+}
+
+function stopRecording() {
+  if (state.recorder && state.isRecording) {
+    state.recorder.stop();
+  }
+}
+
+// ================= VIDEO MANAGEMENT =================
+function updateVideoList() {
+  elements.videoList.innerHTML = '';
+  elements.videoCount.textContent = `Video: ${state.videos.length}`;
+  
+  if (state.videos.length === 0) {
+    elements.videoList.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🎥</div>
+        <p>Nessun video ancora creato</p>
+      </div>
+    `;
+    return;
+  }
+  
+  state.videos.forEach((video, index) => {
+    const item = document.createElement('div');
+    item.className = `video-item ${index === state.currentVideoIndex ? 'active' : ''}`;
+    item.innerHTML = `
+      <div style="font-weight: 600; margin-bottom: 5px;">${video.title}</div>
+      <div class="video-info">
+        <span>${video.date}</span>
+        <span style="background: rgba(139, 92, 246, 0.2); padding: 2px 8px; border-radius: 10px; font-size: 11px;">
+          ${video.platform}
+        </span>
+      </div>
+    `;
+    item.addEventListener('click', () => {
+      state.currentVideoIndex = index;
+      updateVideoList();
+    });
+    elements.videoList.appendChild(item);
+  });
+}
+
+function playSelectedVideo() {
+  if (state.currentVideoIndex === -1 || state.videos.length === 0) {
+    alert('Seleziona un video dalla lista.');
+    return;
+  }
+  
+  const video = state.videos[state.currentVideoIndex];
+  elements.videoPlayer.src = video.url;
+  elements.videoModalTitle.textContent = video.title;
+  elements.videoModal.classList.add('active');
+}
+
+function downloadSelectedVideo() {
+  if (state.currentVideoIndex === -1 || state.videos.length === 0) {
+    alert('Seleziona un video dalla lista.');
+    return;
+  }
+  
+  const video = state.videos[state.currentVideoIndex];
+  const a = document.createElement('a');
+  a.href = video.url;
+  a.download = `video-${video.id}-${state.selectedPlatform}.webm`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function downloadCurrentVideo() {
+  const video = state.videos[state.currentVideoIndex];
+  if (!video) return;
+  
+  const a = document.createElement('a');
+  a.href = video.url;
+  a.download = `video-${video.id}-${state.selectedPlatform}.webm`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+async function shareCurrentVideo() {
+  if (navigator.share) {
+    try {
+      const video = state.videos[state.currentVideoIndex];
+      await navigator.share({
+        title: video.title,
+        text: video.caption.substring(0, 100),
+        url: video.url
+      });
+    } catch (err) {
+      console.log('Condivisione annullata:', err);
+    }
+  } else {
+    alert('La condivisione non è supportata su questo browser.');
+  }
+}
+
+// ================= SETTINGS =================
+function updateSpeed() {
+  state.teleprompterSpeed = elements.speedSlider.value;
+  elements.speedValue.textContent = `${state.teleprompterSpeed}%`;
+  saveState();
+}
+
+function updateZoom() {
+  const zoom = elements.zoomSlider.value / 100;
+  elements.zoomValue.textContent = `${zoom.toFixed(1)}x`;
+  elements.cameraFeed.style.transform = `scale(${zoom})`;
+}
+
+function updatePlatformLabel() {
+  const platformNames = {
+    tiktok: 'TikTok',
+    instagram: 'Instagram',
+    youtube: 'YouTube Shorts',
+    linkedin: 'LinkedIn'
+  };
+  elements.platformLabel.textContent = `Social: ${platformNames[state.selectedPlatform]}`;
+}
+
+// ================= UI UPDATES =================
+function updateUI() {
+  updatePlatformLabel();
+  elements.speedSlider.value = state.teleprompterSpeed;
+  elements.speedValue.textContent = `${state.teleprompterSpeed}%`;
+  
+  if (state.currentResponse) {
+    elements.responseInput.value = state.currentResponse;
+    elements.teleprompterText.innerHTML = formatTeleprompterText(state.currentResponse);
+  }
+  
+  updateCaption();
+  updateVideoList();
+}
+
+// ================= INITIALIZE =================
+document.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>
