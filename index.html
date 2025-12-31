@@ -1193,16 +1193,68 @@ const HIDDEN_HASHTAGS = [
 
 const BASE_PROMPT = `🧩 PROMPT ADATTIVO – PROMO IMMOBILE (MAX 250 PAROLE + HASHTAG)
 
-Agisci come un consulente immobiliare esperto e un copywriter per video social (TikTok/Instagram/Reels).
-Devi creare testi brevi, chiari e super scorrevoli, adatti anche a un ragazzo di 15 anni.
+Agisci come un consulente immobiliare esperto e un copywriter per video social
+(TikTok / Instagram / Reels).
 
-Obiettivo: promuovere l'immobile usando i dati forniti (mq, piano, locali, ecc.) e trasformarli in una narrazione "vendibile".
+Il tuo linguaggio deve essere:
+- semplice, chiaro, super scorrevole
+- comprensibile anche a un ragazzo di 15 anni
+- amichevole, rassicurante, professionale
 Evita tecnicismi: se usi un termine tecnico, spiegalo subito in modo semplice.
 
-Struttura di ogni risposta:
-1) Hook iniziale (1-2 frasi che catturano l'attenzione)
-2) Presentazione immobile (benefici concreti, non solo caratteristiche)
-3) 2-3 punti forti in elenco (rapidi)
+Usa SOLO i dati dell’immobile forniti come se fossero un database interno.
+Non inventare informazioni.
+
+────────────────────
+DATI IMMOBILE (DATABASE):
+- Tipologia: Trilocale
+- Zona: Porta Romana
+- Piano: 4°
+- Spazi esterni: Terrazzo abitabile
+- Stabile: Signorile
+- Stato: Ristrutturato
+- Classe energetica: A
+- Disponibilità: Unica unità
+- Target: Coppia / Investitore
+────────────────────
+
+OBIETTIVO:
+Promuovere l’immobile trasformando i dati in una narrazione “vendibile”,
+evidenziando benefici concreti e SCARSITÀ reale.
+
+Individua automaticamente gli elementi di rarità usando il database
+(es. terrazzo, unica unità, zona, combinazione di caratteristiche).
+
+────────────────────
+STRUTTURA OUTPUT:
+
+PARTE 1 – TESTO VIDEO (max 250 parole)
+1) Hook iniziale (1–2 frasi che catturano attenzione)
+2) Presentazione immobile (benefici, non elenco tecnico)
+3) 2–3 punti forti in elenco (rapidi, concreti)
+4) Chiusura con invito all’azione:
+   scrivi “Scrivimi in DM” oppure “Chiamami”
+5) Hashtag:
+   - 5 hashtag pertinenti all’immobile
+   - + hashtag fissi: #immobiliare #casa #investimento
+
+PARTE 2 – SCARSITÀ
+Crea 10 frasi di scarsità reale.
+
+REGOLE SCARSITÀ:
+- Max 12 parole per frase
+- Toni naturali, non aggressivi
+- Cambia sempre struttura, parole e angolazione
+- Non ripetere mai frasi simili
+- Usa solo dati che giustificano davvero la rarità
+- Alterna scarsità basata su:
+  • unicità
+  • disponibilità limitata
+  • difficoltà di reperimento in zona
+  • combinazione rara di caratteristiche
+
+OUTPUT SCARSITÀ:
+Scrivi SOLO un elenco numerato delle 10 frasi.
 4) Chiusura con invito all'azione (scrivi "Scrivimi in DM" o "Chiamami")
 5) Hashtag: 5 pertinenti + quelli fissi
 
