@@ -1,508 +1,1851 @@
-// Mod<!DOCTYPE html>
-<html lang="it" dir="ltr">
+<!doctype html>
+<html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="viewport" content="viewport-fit=cover">
-  
-  <!-- SEO Meta Tags -->
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Video Creator – Teleprompter Immobiliare</title>
-  <meta name="description" content="Dashboard professionale per creare video immobiliari con teleprompter integrato. Genera contenuti per TikTok, Instagram, Reels in formato 9:16.">
-  <meta name="keywords" content="video immobiliare, teleprompter, real estate, social media, content creation">
-  <meta name="author" content="Video Creator">
-  <meta name="robots" content="index, follow">
-  
-  <!-- Open Graph -->
-  <meta property="og:title" content="Video Creator – Teleprompter Immobiliare">
-  <meta property="og:description" content="Crea video professionali per il settore immobiliare con teleprompter integrato e AI.">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="https://tuo-dominio.com/og-image.jpg">
-  <meta property="og:url" content="https://tuo-dominio.com/video-creator">
-  
-  <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
-  
-  <!-- CSS esterno (qui mantenuto inline per portabilità) -->
+
   <style>
-    /* === RESET & BASE === */
-    :root {
-      --bg: #000000;
-      --text: #f3f4f6;
-      --muted: #b8c2cc; /* Migliorato contrasto: 5.7:1 su nero */
-      --gold: #ffd700;
-      --gold-dark: #ccac00;
-      --border: rgba(255, 255, 255, 0.15);
-      --border-focus: rgba(255, 215, 0, 0.55);
-      --shadow: 0 14px 50px rgba(0, 0, 0, 0.55);
+    :root{
+      --bg:#000000;
+      --text:#f3f4f6;
+      --muted:#a0adb8;
+      --gold:#ffd700;
+      --border: rgba(255,255,255,0.15);
+      --shadow: 0 14px 50px rgba(0,0,0,0.55);
       --radius: 18px;
-      --radius-sm: 12px;
-      --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      
+      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+
       --tele-font: 12px;
       --tele-line: 1.22;
       --stage-w: min(420px, 92vw);
       --zoom: 1;
-      
-      /* Spacing system */
-      --space-xs: 4px;
-      --space-sm: 8px;
-      --space-md: 12px;
-      --space-lg: 16px;
-      --space-xl: 24px;
     }
-    
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
-    html {
-      font-size: 16px;
-      -webkit-text-size-adjust: 100%;
-      scroll-behavior: smooth;
-    }
-    
-    body {
-      font-family: var(--sans);
-      color: var(--text);
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
       background: var(--bg);
       min-height: 100vh;
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
-    
-    /* === ACCESSIBILITY === */
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap;
-      border: 0;
+
+    .wrap{ max-width:1150px; margin:0 auto; padding:14px 12px 84px; }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
     }
-    
-    [aria-hidden="true"] {
-      display: none;
+
+    .row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      align-items:center;
     }
-    
-    /* === FOCUS MANAGEMENT === */
-    :focus-visible {
-      outline: 2px solid var(--gold);
-      outline-offset: 2px;
-    }
-    
-    .btn:focus-visible,
-    input:focus-visible,
-    textarea:focus-visible,
-    select:focus-visible {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.15);
-    }
-    
-    /* === LAYOUT === */
-    .wrap {
-      max-width: 1150px;
-      margin: 0 auto;
-      padding: var(--space-md) var(--space-sm) 84px;
-    }
-    
-    /* === TYPOGRAPHY === */
-    h1, h2, h3, h4, h5, h6 {
-      font-weight: 800;
-      line-height: 1.2;
-    }
-    
-    .h {
-      margin: 0 0 var(--space-sm);
-      font-size: 10px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      font-weight: 950;
-    }
-    
-    /* === BUTTONS === */
-    .btn {
-      position: relative;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-sm);
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.06);
-      color: var(--text);
-      padding: var(--space-sm) var(--space-md);
-      border-radius: var(--radius-sm);
-      cursor: pointer;
-      font-weight: 950;
-      letter-spacing: 0.2px;
-      font-size: 11px;
-      line-height: 1;
-      white-space: nowrap;
-      text-decoration: none;
-      user-select: none;
+
+    .btn{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      padding:8px 10px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:950;
+      letter-spacing:.2px;
+      font-size:11px;
+      line-height:1;
+      white-space:nowrap;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+      position:relative;
       transform: translateY(0) scale(1);
-      transition: all 0.14s ease;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      min-height: 32px;
+      transition: transform .14s ease, filter .14s ease, box-shadow .14s ease, border-color .14s ease;
+      box-shadow: 0 10px 22px rgba(0,0,0,.25);
+      overflow:hidden;
     }
-    
-    @media (max-width: 768px) {
-      .btn {
-        min-height: 44px;
-        min-width: 44px;
-        padding: 12px 16px;
-      }
+    .btn::after{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: radial-gradient(500px 140px at 20% 0%, rgba(255,255,255,.14), transparent 60%),
+                  radial-gradient(500px 140px at 80% 100%, rgba(255,255,255,.10), transparent 55%);
+      opacity:0;
+      transition: opacity .18s ease;
+      pointer-events:none;
     }
-    
-    /* Button states */
-    .btn:hover:not(:disabled) {
+    .btn:hover{
       transform: translateY(-2px) scale(1.01);
-      border-color: rgba(255, 215, 0, 0.35);
-      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255,215,0,.35);
+      box-shadow: 0 14px 34px rgba(0,0,0,.40);
       filter: brightness(1.1);
     }
-    
-    .btn:active:not(:disabled) {
-      transform: translateY(0) scale(0.99);
+    .btn:hover::after{ opacity:1; }
+    .btn:active{
+      transform: translateY(0px) scale(.99);
       filter: brightness(0.98);
     }
-    
-    .btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none !important;
+
+    .btn.tiny{
+      padding:6px 9px;
+      font-size:10px;
+      border-radius:11px;
+      box-shadow:none;
     }
-    
-    /* Button variants */
-    .btn.primary {
-      background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 215, 0, 0.75));
-      color: #000;
-      border-color: rgba(255, 215, 0, 0.55);
+
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(255,215,0,.95), rgba(255,215,0,.75));
+      color:#000;
+      border-color: rgba(255,215,0,.55);
+      font-weight: 1000;
     }
+    .btn.blue{
+      background: linear-gradient(135deg, rgba(57,90,140,.95), rgba(57,90,140,.70));
+      border-color: rgba(57,90,140,.55);
+    }
+    .btn.violet{
+      background: linear-gradient(135deg, rgba(123,79,189,.95), rgba(123,79,189,.70));
+      border-color: rgba(123,79,189,.55);
+    }
+    .btn.gray{ background: rgba(255,255,255,.06); }
     
+    /* ✅ BOTTONI DOMANDA IN GIALLO */
     .btn.question-btn {
-      background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 215, 0, 0.75));
+      background: linear-gradient(135deg, rgba(255,215,0,.95), rgba(255,215,0,.75));
       color: #000;
-      border-color: rgba(255, 215, 0, 0.55);
+      border-color: rgba(255,215,0,.55);
+      font-weight: 1000;
     }
-    
-    .btn.rec {
-      background: linear-gradient(135deg, rgba(255, 45, 45, 0.95), rgba(255, 45, 45, 0.55));
-      border-color: rgba(255, 45, 45, 0.55);
-      color: #120707;
+
+    .btn.rec{
+      background: linear-gradient(135deg, rgba(255,45,45,.95), rgba(255,45,45,.55));
+      border-color: rgba(255,45,45,.55);
+      color:#120707;
+      font-weight: 1000;
     }
-    
-    .btn.whatsapp {
-      background: linear-gradient(135deg, #25D366, #128C7E);
-      color: white;
-      border-color: rgba(37, 211, 102, 0.6);
+    .btn.rec .dot{
+      width:10px; height:10px; border-radius:999px;
+      background:#ff2d2d;
+      box-shadow: 0 0 0 0 rgba(255,45,45,.45);
+      animation: pulseDot 1.15s ease-in-out infinite;
     }
-    
-    /* === FORMS === */
-    .field {
-      margin-bottom: var(--space-md);
+    @keyframes pulseDot{
+      0%{ box-shadow: 0 0 0 0 rgba(255,45,45,.45); transform: scale(1); }
+      60%{ box-shadow: 0 0 0 10px rgba(255,45,45,0); transform: scale(1.06); }
+      100%{ box-shadow: 0 0 0 0 rgba(255,45,45,0); transform: scale(1); }
     }
-    
-    .field label {
-      display: block;
-      margin-bottom: var(--space-xs);
-      font-size: 11px;
-      font-weight: 700;
+
+    .btn .ico{
+      display:inline-flex;
+      transform: translateY(0);
+      transition: transform .16s ease;
+    }
+    .btn:hover .ico{
+      transform: translateY(-1px) rotate(-2deg);
+    }
+
+    .pill{
+      font-size:10px;
+      color:var(--muted);
+      padding:6px 10px;
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:rgba(0,0,0,.25);
+      font-weight:900;
+      letter-spacing:.2px;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      white-space:nowrap;
+    }
+
+    .hintTop{
+      margin: 6px 0 10px;
+      font-size:11px;
       color: var(--muted);
+      line-height: 1.35;
+      background: rgba(255,255,255,.03);
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.08);
     }
-    
-    .field input,
-    .field select,
-    .field textarea {
-      width: 100%;
-      padding: var(--space-md);
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
-      background: rgba(0, 0, 0, 0.25);
-      color: var(--text);
-      font-family: var(--sans);
-      font-size: 12px;
-      font-weight: 600;
-      transition: all 0.2s ease;
-    }
-    
-    .field textarea {
-      min-height: 120px;
-      resize: vertical;
-      line-height: 1.4;
-    }
-    
-    @media (max-width: 768px) {
-      .field input,
-      .field select,
-      .field textarea {
-        font-size: 16px; /* Previene zoom automatico iOS */
-      }
-    }
-    
-    /* === GRID SYSTEM === */
-    .grid2 {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--space-sm);
-    }
-    
-    @media (max-width: 480px) {
-      .grid2 {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    .layout {
-      display: grid;
+
+    .layout{
+      display:grid;
       grid-template-columns: 1fr 360px;
-      gap: var(--space-md);
-      margin-top: var(--space-md);
+      gap:12px;
+      align-items:start;
+      margin-top:12px;
     }
-    
-    @media (max-width: 1024px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 980px){ .layout{ grid-template-columns:1fr; } }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
     }
-    
-    /* === CARD COMPONENT === */
-    .card {
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow: hidden;
+    .section{ padding:12px; }
+    .section + .section{ border-top:1px solid rgba(255,255,255,.10); }
+
+    .h{
+      margin:0 0 8px;
+      font-size:10px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.8px;
+      font-weight:950;
     }
-    
-    .section {
-      padding: var(--space-md);
+
+    .stageRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      align-items:start;
     }
-    
-    .section + .section {
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    @media (max-width: 980px){ .stageRow{ grid-template-columns:1fr; } }
+
+    .stageBlock{
+      width: var(--stage-w);
+      margin: 0 auto;
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
     }
-    
-    /* === STAGE & VIDEO === */
-    #stage916 {
+
+    #stage916{
       width: 100%;
       aspect-ratio: 9 / 16;
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 18px;
       overflow: hidden;
       position: relative;
-      background: #000;
+      background:#000;
       box-shadow: var(--shadow);
     }
-    
-    #cam {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
+
+    #cam{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
       object-fit: cover;
       transform: scale(var(--zoom));
       transform-origin: center;
     }
-    
-    /* === MODAL === */
-    .modalBackdrop {
+
+    #overlay{
+      position:absolute;
+      inset:0;
+      padding: 10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      pointer-events:none;
+      z-index: 2;
+    }
+
+    #questionBoxOverlay{
+      font-size: 11px;
+      font-weight: 950;
+      line-height: 1.15;
+      padding: 7px 9px;
+      border-radius: 12px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(6px);
+      white-space:pre-wrap;
+    }
+
+    #teleprompterOverlay{
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    #teleText{
+      position:absolute;
+      left:0; right:0;
+      white-space: pre-wrap;
+      font-size: var(--tele-font);
+      line-height: var(--tele-line);
+      font-weight: 800;
+      color: rgba(243,244,246,.96);
+      text-shadow: 0 2px 12px rgba(0,0,0,.85);
+      transform: translateY(20px);
+    }
+
+    .controlsRow{
+      margin-top:10px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:stretch;
+    }
+    .bar{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    .bar.left{ justify-content:flex-start; }
+    .bar.between{ justify-content:space-between; }
+
+    .sliderRow{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:var(--muted);
+      font-size:10px;
+      font-weight:950;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    input[type="range"]{ width:170px; accent-color: var(--gold); }
+
+    .chk{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+      color:var(--muted);
+      font-weight:950;
+      font-size:10px;
+      white-space:nowrap;
+    }
+    .check{
+      width:16px; height:16px;
+      accent-color: var(--gold);
+      cursor:pointer;
+    }
+
+    .field textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      outline:none;
+      font-weight:850;
+      resize: vertical;
+      min-height: 120px;
+      font-size:12px;
+      line-height:1.25;
+    }
+    .field textarea:focus{
+      border-color: rgba(255,215,0,.55);
+      box-shadow: 0 0 0 6px rgba(255,215,0,.15);
+    }
+
+    .mini{
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+      white-space:pre-wrap;
+      word-break:break-word;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:14px;
+      padding:10px;
+    }
+
+    /* Profili piccoli */
+    .profiles{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:7px;
+      margin-top:8px;
+    }
+    .profileRow{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      padding:7px 8px;
+      border:1px solid rgba(255,255,255,.15);
+      border-radius:12px;
+      background:rgba(0,0,0,.20);
+    }
+    .profileMeta{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      min-width:0;
+      flex:1;
+    }
+    .profileMeta b{
+      font-size:11px;
+      font-weight:950;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .nextBadge{
+      font-size:9px;
+      font-weight:1000;
+      padding:3px 7px;
+      border-radius:999px;
+      border:1px solid rgba(255,45,45,.55);
+      color: rgba(255,235,235,.95);
+      background: rgba(255,45,45,.20);
+      white-space:nowrap;
+      display:none;
+      pointer-events:none;
+      user-select:none;
+    }
+    .nextBadge.show{ display:inline-flex; }
+
+    #recLamp{
+      position:absolute; top:12px; right:12px;
+      padding:7px 9px; border-radius:12px;
+      background:rgba(0,0,0,.45);
+      border:1px solid rgba(255,255,255,.20);
+      font-weight:950; font-size:11px;
+      display:none; align-items:center; gap:8px;
+      backdrop-filter: blur(6px);
+      z-index: 6;
+    }
+
+    .bottomBar{
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      padding: 10px 12px;
+      background: rgba(0,0,0,.45);
+      border-top: 1px solid rgba(255,255,255,.15);
+      backdrop-filter: blur(10px);
+      display:flex;
+      justify-content:flex-end;
+      z-index: 50;
+    }
+
+    details{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      background: rgba(0,0,0,.20);
+      padding:10px;
+    }
+    summary{
+      cursor:pointer;
+      list-style:none;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      user-select:none;
+      font-weight:950;
+      color: var(--text);
+      font-size:11px;
+    }
+    summary::-webkit-details-marker{ display:none; }
+    .subtle{
+      font-size:11px;
+      color: var(--muted);
+      line-height:1.35;
+      margin-top:6px;
+    }
+    .codeRow{
+      display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px;
+    }
+    .codeRow input{
+      flex:1;
+      min-width: 160px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      outline:none;
+      font-weight:900;
+      font-size:12px;
+    }
+    .codeRow input:focus{
+      border-color: rgba(255,215,0,.55);
+      box-shadow: 0 0 0 6px rgba(255,215,0,.15);
+    }
+
+    .ctrlLeft{ display:flex; gap:8px; align-items:center; }
+    .ctrlMid{ display:flex; gap:8px; align-items:center; justify-content:center; }
+    .ctrlRight{ display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-left:auto; }
+
+    /* ✅ NEW: form fields */
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:8px;
+    }
+    @media (max-width: 420px){ .grid2{ grid-template-columns:1fr; } }
+    .field input, .field select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.15);
+      background:rgba(0,0,0,.25);
+      color:var(--text);
+      outline:none;
+      font-weight:900;
+      font-size:12px;
+    }
+    .field input:focus, .field select:focus{
+      border-color: rgba(255,215,0,.55);
+      box-shadow: 0 0 0 6px rgba(255,215,0,.15);
+    }
+
+    /* ✅ NEW: CAMPO TESTO LIBERO */
+    .free-text-section {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(0,0,0,.20);
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .free-text-section textarea {
+      min-height: 80px;
+      margin-bottom: 8px;
+    }
+
+    /* ===== ISTRUZIONI (MODAL) ===== */
+    .modalBackdrop{
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0,0,0,.70);
       backdrop-filter: blur(10px);
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
-      padding: var(--space-md);
+      z-index: 999;
+      padding: 14px;
     }
-    
-    .modalBackdrop.show {
-      display: flex;
-    }
-    
-    .modalCard {
+    .modalBackdrop.show{ display:flex; }
+
+    .modalCard{
       width: min(920px, 96vw);
       max-height: min(82vh, 780px);
       overflow: auto;
-      border-radius: var(--radius);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(0, 0, 0, 0.3));
-      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.65);
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(0,0,0,.30));
+      box-shadow: 0 20px 80px rgba(0,0,0,.65);
     }
-    
-    /* === UTILITY CLASSES === */
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-sm);
-      padding: 6px 10px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: rgba(0, 0, 0, 0.25);
-      font-size: 10px;
-      font-weight: 900;
-      color: var(--muted);
-      letter-spacing: 0.2px;
-      white-space: nowrap;
+
+    .modalHead{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
     }
-    
-    .subtle {
-      font-size: 11px;
+    .modalHead h3{
+      margin:0;
+      font-size: 12px;
+      letter-spacing: .7px;
+      text-transform: uppercase;
       color: var(--muted);
+      font-weight: 1000;
+    }
+    .modalBody{
+      padding: 12px;
+      font-size: 12px;
       line-height: 1.35;
-      margin-top: var(--space-sm);
+      color: var(--text);
+    }
+    .modalBody .k{
+      color: var(--gold);
+      font-weight: 1000;
+    }
+    .modalBody ul{ margin: 8px 0 12px 18px; }
+    .modalBody li{ margin: 6px 0; }
+    .hr{
+      height:1px;
+      background: rgba(255,255,255,.12);
+      margin: 12px 0;
     }
     
-    /* === ANIMATIONS === */
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(255, 45, 45, 0.45); }
-      70% { box-shadow: 0 0 0 10px rgba(255, 45, 45, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 45, 45, 0); }
+    /* ✅ NEW: WHATSAPP INVIA BUTTON */
+    .btn.whatsapp {
+      background: linear-gradient(135deg, #25D366, #128C7E);
+      color: white;
+      border-color: rgba(37, 211, 102, 0.6);
+      font-weight: 1000;
     }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    /* === LOADING STATES === */
-    .loading {
-      position: relative;
-      pointer-events: none;
-      opacity: 0.7;
-    }
-    
-    .loading::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 16px;
-      height: 16px;
-      margin: -8px 0 0 -8px;
-      border: 2px solid var(--border);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    /* === PRINT STYLES === */
-    @media print {
-      .no-print {
-        display: none !important;
-      }
-      
-      body {
-        background: white;
-        color: black;
-      }
-      
-      .card {
-        border: 1px solid #ddd;
-        box-shadow: none;
-      }
+    .btn.whatsapp:hover {
+      background: linear-gradient(135deg, #25D366, #1da851);
+      border-color: rgba(37, 211, 102, 0.8);
     }
   </style>
-  
-  <!-- JavaScript ottimizzato (solo parte critica iniziale) -->
-  <script>
-    // Critical JS loaded inline
-    window.APP_CONFIG = {
-      GESTIONALE_URL: "https://tuo-gestionale.com",
-      CHATGPT_URL: "https://chatgpt.com/c/69528e47-0920-8331-8d43-59824e8a9c54",
-      WHATSAPP_NUMBER: "+393713708294",
-      UNLOCK_CODE: "16091979Jm",
-      VERSION: "2.1.0"
-    };
-    
-    // Feature detection
-    window.supports = {
-      mediaRecorder: typeof MediaRecorder !== 'undefined',
-      clipboard: navigator.clipboard && typeof navigator.clipboard.writeText === 'function',
-      webRTC: navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function',
-      cssGrid: CSS.supports('display', 'grid'),
-      focusVisible: CSS.supports('selector(:focus-visible)')
-    };
-    
-    // Load non-critical JS deferred
-    function loadAppScript() {
-      const script = document.createElement('script');
-      script.src = 'app.js'; // File esterno
-      script.defer = true;
-      script.crossOrigin = 'anonymous';
-      document.head.appendChild(script);
-    }
-    
-    // Load after DOM ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadAppScript);
-    } else {
-      loadAppScript();
-    }
-  </script>
 </head>
 
 <body>
-  <!-- Screen reader announcements -->
-  <div id="sr-announcer" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-  
-  <!-- Skip to main content -->
-  <a href="#main-content" class="sr-only sr-only-focusable">Salta al contenuto principale</a>
-  
-  <div class="wrap">
-    <!-- Header con navigazione principale -->
-    <header role="banner">
-      <div class="row" style="flex:1;">
-        <button class="btn question-btn" id="btnNext" type="button" aria-label="Genera una nuova domanda">
-          <span class="ico" aria-hidden="true">✨</span> Nuova domanda
-        </button>
-        
-        <!-- Altri bottoni con attributi ARIA... -->
-      </div>
-    </header>
-    
-    <!-- Contenuto principale -->
-    <main id="main-content" role="main">
-      <!-- Sezioni esistenti con miglioramenti semantici... -->
-    </main>
-    
-    <!-- Footer -->
-    <footer class="bottomBar" role="contentinfo">
-      <button class="btn tiny gray" id="btnBackBottom" type="button" aria-label="Torna al gestionale">
-        ← Gestionale
+<div class="wrap">
+
+  <header>
+    <div class="row" style="flex:1;">
+      <button class="btn question-btn" id="btnNext" type="button">
+        <span class="ico">✨</span> Nuova domanda
       </button>
-    </footer>
+
+      <button class="btn blue" id="btnOpenChatGPTPasteQ" type="button" title="Copia PROMPT + domanda e apre ChatGPT">
+        <span class="ico">💬</span> Apri ChatGPT + copia domanda
+      </button>
+
+      <button class="btn violet" id="btnPasteTop" type="button" title="Incolla dagli appunti nel blocco risposta qui sotto">
+        <span class="ico">📋</span> Incolla risposta
+      </button>
+
+      <!-- ✅ ISTRUZIONI BUTTON -->
+      <button class="btn gray" id="btnInstructions" type="button" title="Apri le istruzioni operative">
+        <span class="ico">📖</span> Istruzioni
+      </button>
+
+      <!-- ✅ WHATSAPP INVIA BUTTON -->
+      <button class="btn whatsapp" id="btnSendWhatsApp" type="button" title="Invia caption completa su WhatsApp">
+        <span class="ico">📱</span> Invia su WhatsApp
+      </button>
+
+      <span class="pill">
+        <span id="videoCounter">Video: 0</span>
+        <span>•</span>
+        <span id="activeProfileLabel">Prossimo: —</span>
+      </span>
+    </div>
+
+    <div class="row">
+      <button class="btn tiny gray" id="btnBackTop" type="button">← Gestionale</button>
+    </div>
+  </header>
+
+  <div class="hintTop">
+    <b>FLUSSO RAPIDO:</b> 1) <b>Nuova domanda</b> → 2) <b>Apri ChatGPT</b> (copia automatica) → 3) ChatGPT genera → 4) <b>Incolla risposta</b> → 
+    5) <b>Invia al teleprompter</b> → 6) <b>Teleprompter + REC</b> → 7) <b>Invia su WhatsApp</b> (caption completa)
   </div>
-  
-  <!-- Modal istruzioni -->
-  <div class="modalBackdrop" id="instructionsModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="instructionsTitle">
-    <!-- Contenuto modal... -->
+
+  <!-- ✅ DATI IMMOBILE -->
+  <div class="card">
+    <div class="section">
+      <p class="h">Dati immobile (inseriti dal cliente)</p>
+
+      <div class="grid2">
+        <div class="field">
+          <input id="f_displayName" placeholder="Nome visualizzato (es: Trilocale Luminoso)" />
+        </div>
+        <div class="field">
+          <input id="f_mq" type="number" min="0" step="1" placeholder="Metri Quadri (mq)" />
+        </div>
+
+        <div class="field">
+          <input id="f_piano" placeholder="Piano (es: 2° / rialzato / terra)" />
+        </div>
+        <div class="field">
+          <input id="f_locali" placeholder="Locali (es: 3 / bilocale / trilocale)" />
+        </div>
+
+        <div class="field">
+          <input id="f_bagno" placeholder="Bagno/i (es: 1 / 2 / 1 finestrato)" />
+        </div>
+        <div class="field">
+          <input id="f_riscaldamento" placeholder="Riscaldamento (es: autonomo / centralizzato)" />
+        </div>
+
+        <div class="field">
+          <select id="f_giardino">
+            <option value="">Giardino (seleziona)</option>
+            <option value="Sì">Sì</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+        <div class="field">
+          <select id="f_garage">
+            <option value="">Garage/box (seleziona)</option>
+            <option value="Sì">Sì</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <select id="f_arredamento">
+            <option value="">Arredamento (seleziona)</option>
+            <option value="Arredato">Arredato</option>
+            <option value="Parzialmente arredato">Parzialmente arredato</option>
+            <option value="Non arredato">Non arredato</option>
+          </select>
+        </div>
+        <div class="field">
+          <select id="f_ascensore">
+            <option value="">Ascensore (seleziona)</option>
+            <option value="Sì">Sì</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <select id="f_libero">
+            <option value="">Libero (seleziona)</option>
+            <option value="Subito">Subito</option>
+            <option value="Da concordare">Da concordare</option>
+            <option value="Occupato">Occupato</option>
+          </select>
+        </div>
+        <div class="field">
+          <input id="f_classeImmobile" placeholder="Classe Immobile (es: A4 / B / C ...)" />
+        </div>
+
+        <div class="field">
+          <input id="f_anno" type="number" min="0" step="1" placeholder="Anno di Costruzione (es: 1998)" />
+        </div>
+        <div class="field">
+          <select id="f_ristrutturato">
+            <option value="">Ristrutturato (seleziona)</option>
+            <option value="Sì">Sì</option>
+            <option value="No">No</option>
+            <option value="Parzialmente">Parzialmente</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="bar left" style="margin-top:10px;">
+        <button class="btn tiny gray" id="btnClearProperty" type="button">🧹 Svuota dati</button>
+        <span class="pill" id="propertyStatus">Dati: —</span>
+      </div>
+
+      <div class="subtle">
+        Questi dati vengono aggiunti automaticamente al testo che copi su ChatGPT.
+      </div>
+    </div>
   </div>
+
+  <!-- ✅ TESTO LIBERO (NUOVO CAMPO) -->
+  <div class="card free-text-section">
+    <p class="h">Testo libero (opzionale - aggiunge contenuto extra)</p>
+    <div class="field">
+      <textarea id="freeText" placeholder="Scrivi qui eventuali note aggiuntive, caratteristiche particolari o punti di forza extra dell'immobile..."></textarea>
+    </div>
+    <div class="subtle">
+      Questo testo verrà aggiunto in fondo al prompt per ChatGPT (non obbligatorio).
+    </div>
+  </div>
+
+  <!-- BLOCCO RISPOSTA IN ALTO -->
+  <div class="card">
+    <div class="section">
+      <p class="h">Risposta (da ChatGPT o scritta da te)</p>
+      <div class="field">
+        <textarea id="answerBox" placeholder="Qui verrà incollata la risposta quando premi 'Incolla risposta'... Oppure scrivi direttamente il testo per il teleprompter"></textarea>
+      </div>
+
+      <div class="bar left" style="margin-top:10px;">
+        <button class="btn primary" id="btnSendTele" type="button"><span class="ico">➡️</span> Invia al teleprompter</button>
+        <button class="btn gray" id="btnCopyCaption" type="button" title="Copia caption con hashtag (se non già presenti)">
+          <span class="ico">📋</span> Copia caption
+        </button>
+      </div>
+
+      <div class="subtle">
+        <b>Modalità rapida:</b> Puoi anche scrivere direttamente qui il testo che vuoi visualizzare nel teleprompter, senza passare da ChatGPT.
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <!-- MAIN -->
+    <div class="card">
+      <div class="section">
+        <p class="h">Video 9:16 + teleprompter</p>
+
+        <div class="stageRow">
+          <div class="stageBlock">
+            <div id="stage916">
+              <video id="cam" autoplay playsinline muted></video>
+
+              <div id="recLamp">
+                <span style="width:10px;height:10px;border-radius:999px;background:#ff2d2d;display:inline-block;"></span>
+                <span id="recTime">REC 00:00</span>
+              </div>
+
+              <div id="overlay">
+                <div id="questionBoxOverlay">Premi "Nuova domanda".</div>
+                <div id="teleprompterOverlay">
+                  <div id="teleText">Incolla/scrivi una risposta in alto → "Invia al teleprompter" → "Teleprompter + REC".</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="controlsRow">
+              <div class="bar between" style="width:100%;">
+                <div class="ctrlLeft">
+                  <button class="btn gray" id="btnCam" type="button"><span class="ico">📷</span> Camera</button>
+                </div>
+
+                <div class="ctrlMid">
+                  <button class="btn gray" id="btnStop" type="button"><span class="ico">⏹</span> Stop</button>
+                  <button class="btn gray" id="btnRestart" type="button"><span class="ico">↻</span> Riavvia</button>
+                </div>
+
+                <div class="ctrlRight">
+                  <button class="btn rec" id="btnTeleRec" type="button" title="Avvia teleprompter e registrazione">
+                    <span class="dot"></span> Teleprompter + REC
+                  </button>
+                </div>
+              </div>
+
+              <div class="bar">
+                <label class="chk"><input class="check" type="checkbox" id="speed120"> 120</label>
+                <label class="chk"><input class="check" type="checkbox" id="speed105"> 105</label>
+                <label class="chk"><input class="check" type="checkbox" id="speed90"> 90</label>
+                <span class="pill" id="speedLabel">Vel: 105s</span>
+              </div>
+
+              <div class="sliderRow">
+                <span>Zoom</span>
+                <input id="zoom" type="range" min="1" max="2.5" step="0.1" value="1" />
+                <span id="zoomVal">1.0x</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <p class="h">Rotazione profili (piccola)</p>
+            <div class="profiles">
+              <div class="profileRow">
+                <input class="check" type="checkbox" id="rot_tiktok" checked>
+                <div class="profileMeta"><b>📱 TikTok</b></div>
+                <span class="nextBadge" id="badge_tiktok">PROSSIMO</span>
+              </div>
+              <div class="profileRow">
+                <input class="check" type="checkbox" id="rot_instagram" checked>
+                <div class="profileMeta"><b>📸 Instagram</b></div>
+                <span class="nextBadge" id="badge_instagram">PROSSIMO</span>
+              </div>
+              <div class="profileRow">
+                <input class="check" type="checkbox" id="rot_shorts">
+                <div class="profileMeta"><b>🎥 Shorts</b></div>
+                <span class="nextBadge" id="badge_shorts">PROSSIMO</span>
+              </div>
+              <div class="profileRow">
+                <input class="check" type="checkbox" id="rot_facebook">
+                <div class="profileMeta"><b>💼 Facebook</b></div>
+                <span class="nextBadge" id="badge_facebook">PROSSIMO</span>
+              </div>
+            </div>
+
+            <div class="subtle">
+              Seleziona i canali da includere. "PROSSIMO" è solo un indicatore (non cliccabile).
+            </div>
+          </div>
+        </div>
+
+        <canvas id="recCanvas" width="1080" height="1920" style="display:none;"></canvas>
+      </div>
+    </div>
+
+    <!-- SIDE -->
+    <div class="card">
+      <div class="section">
+        <div class="bar between">
+          <p class="h" style="margin:0;">Caption (memorizzata)</p>
+          <label class="chk" title="Memorizza la caption (senza hashtag) per il prossimo avvio">
+            <input type="checkbox" id="chkRememberCaption" class="check" checked />
+            Memorizza
+          </label>
+        </div>
+
+        <div class="mini" id="captionPreview" style="margin-top:10px;">—</div>
+        <div class="subtle">Gli hashtag automatici vengono aggiunti solo in copia (se non già presenti).</div>
+      </div>
+
+      <div class="section">
+        <p class="h">Video creati</p>
+        <div class="subtle">Seleziona un elemento (qui sotto) per rivederlo.</div>
+
+        <video id="playback" controls style="width:100%; border-radius:14px; background:#000; margin-top:10px;"></video>
+
+        <div class="bar left" style="margin-top:10px;">
+          <button class="btn" id="btnDownloadVideo" type="button"><span class="ico">📥</span> Scarica video</button>
+          <button class="btn tiny gray" id="btnClearList" type="button">🗑️ Svuota</button>
+        </div>
+
+        <!-- UPLOAD VIDEO -->
+        <div class="bar left" style="margin-top:10px;">
+          <input id="uploadVideo" type="file" accept="video/*" style="display:none;" />
+          <button class="btn" id="btnUploadVideo" type="button" title="Carica un video già pronto (uso futuro)">
+            <span class="ico">⬆️</span> Carica video
+          </button>
+          <span class="pill">Upload in lista</span>
+        </div>
+
+        <div class="mini" id="recList" style="margin-top:10px; max-height:260px; overflow:auto;">—</div>
+      </div>
+
+      <div class="section">
+        <details id="promptDetails">
+          <summary>
+            <span>🧠 Prompt ChatGPT (clicca per aprire)</span>
+            <span class="pill" id="promptStatePill">Bloccato</span>
+          </summary>
+
+          <div class="subtle">
+            Questo prompt viene sempre inserito <b>prima</b> della domanda quando premi "Apri ChatGPT + copia domanda".
+          </div>
+
+          <div class="field" style="margin-top:10px;">
+            <textarea id="promptBox" readonly></textarea>
+          </div>
+
+          <div class="codeRow">
+            <input id="unlockCode" placeholder="Codice per modificare il prompt" />
+            <button class="btn tiny primary" id="btnUnlock" type="button">Sblocca</button>
+            <button class="btn tiny" id="btnSavePrompt" type="button" disabled>Salva</button>
+            <button class="btn tiny" id="btnResetPrompt" type="button" disabled>Ripristina</button>
+          </div>
+
+          <div class="subtle">Per modificare serve il codice: <b>16091979Jm</b>.</div>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ MODAL ISTRUZIONI -->
+<div class="modalBackdrop" id="instructionsModal" aria-hidden="true">
+  <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="instructionsTitle">
+    <div class="modalHead">
+      <h3 id="instructionsTitle">Istruzioni operative • Video Creator</h3>
+      <button class="btn tiny gray" id="btnCloseInstructions" type="button">✖ Chiudi</button>
+    </div>
+
+    <div class="modalBody">
+      <div class="pill" style="display:inline-flex; margin-bottom:10px;">
+        Obiettivo: <b style="color:var(--text);">domanda → testo → teleprompter → video pronto</b>
+      </div>
+
+      <p style="margin:0 0 8px;">
+        Questa dashboard serve a creare video verticali <span class="k">9:16</span> (TikTok/Instagram/Reels/Shorts) usando
+        i <span class="k">dati immobile</span> + un testo generato con <span class="k">ChatGPT</span> + un <span class="k">teleprompter</span> integrato.
+      </p>
+
+      <div class="hr"></div>
+
+      <p class="h" style="margin:0 0 8px;">Flusso in 7 passi</p>
+      <ol style="margin: 0 0 12px 18px;">
+        <li><b>Compila "Dati immobile"</b> (più dati = testo migliore).</li>
+        <li><b>Usa "Testo libero"</b> per aggiungere dettagli extra (opzionale).</li>
+        <li><b>Premi "Nuova domanda"</b> finché trovi la domanda giusta.</li>
+        <li><b>Premi "Apri ChatGPT + copia domanda"</b> → incolla su ChatGPT → invia → copia la risposta.</li>
+        <li><b>Premi "Incolla risposta"</b> e poi <b>"Invia al teleprompter"</b>.</li>
+        <li><b>Premi "Teleprompter + REC"</b> per registrare con teleprompter e timer REC.</li>
+        <li><b>Premi "Invia su WhatsApp"</b> per inviare la caption completa con hashtag.</li>
+      </ol>
+
+      <div class="hr"></div>
+
+      <p class="h" style="margin:0 0 8px;">Funzioni chiave</p>
+      <ul>
+        <li><b>Camera</b>: accende la camera/microfono.</li>
+        <li><b>Velocità (90/105/120)</b>: regola lo scorrimento del teleprompter.</li>
+        <li><b>Zoom</b>: ingrandisce l'inquadratura.</li>
+        <li><b>Testo libero</b>: aggiunge contenuto extra al prompt ChatGPT.</li>
+        <li><b>Invia su WhatsApp</b>: manda la caption completa con hashtag al numero +393713708294.</li>
+      </ul>
+
+      <div class="hr"></div>
+
+      <p class="h" style="margin:0 0 8px;">Modalità rapida</p>
+      <p style="margin:0;">
+        Puoi <b>scrivere direttamente</b> nel campo "Risposta" e usare "Invia al teleprompter" senza passare da ChatGPT.
+        Ideale per testi brevi o quando hai già il contenuto pronto.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="bottomBar">
+  <button class="btn tiny gray" id="btnBackBottom" type="button">← Gestionale</button>
+</div>
+
+<script>
+/* ==========================
+   CONFIG
+========================== */
+const GESTIONALE_URL = "https://tuo-gestionale.com";
+const CHATGPT_URL = "https://chatgpt.com/c/69528e47-0920-8331-8d43-59824e8a9c54";
+const WHATSAPP_NUMBER = "+393713708294";
+
+/* Hashtag automatici */
+const HIDDEN_HASHTAGS = [
+  "#immobiliarelasacra","#josephcretorlab","#realmediapro","#amamy","#immobiliare","#realestateitalia",
+  "#mercatoimmobiliare","#agenziaimmobiliare","#casainvendita","#venditacasa","#investimentiimmobiliari",
+  "#property","#realestate","#digitalstrategist","#digitalstrategy","#marketingdigitale","#strategiamarketing",
+  "#brandstrategy","#contentstrategy","#socialmediastrategy","#growthmarketing","#personalbranding","#branding",
+  "#businessdigitale","#marketingonline"
+].join(" ");
+
+/* Prompt base */
+const BASE_PROMPT = `🧩 PROMPT ADATTIVO – PROMO IMMOBILE (MAX 250 PAROLE + HASHTAG)
+
+Agisci come un consulente immobiliare esperto e un copywriter per video social (TikTok/Instagram/Reels).
+Devi creare testi brevi, chiari e super scorrevoli, adatti anche a un ragazzo di 15 anni.
+
+Obiettivo: promuovere l'immobile usando i dati forniti (mq, piano, locali, ecc.) e trasformarli in una narrazione "vendibile".
+Evita tecnicismi: se usi un termine tecnico, spiegalo subito in modo semplice.
+
+Struttura di ogni risposta:
+1) Hook iniziale (1-2 frasi che catturano l'attenzione)
+2) Presentazione immobile (benefici concreti, non solo caratteristiche)
+3) 2-3 punti forti in elenco (rapidi)
+4) Chiusura con invito all'azione (scrivi "Scrivimi in DM" o "Chiamami")
+5) Hashtag: 5 pertinenti + quelli fissi
+
+Regole fondamentali:
+- Massimo 250 parole, non di più
+- Tone: amichevole, rassicurante, professionale
+- Niente linguaggio tecnico inutile`;
+
+/* Codice sblocco prompt */
+const UNLOCK_CODE = "16091979Jm";
+
+/* Question Bank */
+const QUESTION_BANK = [
+  { q:"Scrivimi un testo per un video di 20-30 secondi che presenti questo immobile in modo super attraente." },
+  { q:"Crea una caption Instagram persuasiva per questo immobile, con call-to-action forte." },
+  { q:"Fammi una versione più emozionale e una più 'dati e concretezza' per lo stesso immobile." },
+  { q:"Scrivi un testo stile 'tour rapido' (come se stessi mostrando le stanze) per questo immobile." },
+  { q:"Scrivi una versione pensata per chi cerca prima casa (tono rassicurante)." },
+  { q:"Scrivi una versione pensata per investitori (tono pratico, focalizzato sul valore)." },
+];
+
+/* Teleprompter speed */
+const TELE_SPEEDS = { s120:120, s105:105, s90:90 };
+let teleprompterSeconds = TELE_SPEEDS.s105;
+
+/* State */
+let qIdx = -1;
+let currentQuestion = "";
+let lastCaptionClean = "";
+let totalVideos = 0;
+
+/* Rotazione profili */
+let rotationIndex = 0;
+
+/* Prompt state */
+let promptText = "";
+
+/* ==========================
+   HELPERS
+========================== */
+const $ = (id) => document.getElementById(id);
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+function nowStamp(){
+  const d = new Date();
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}-${pad2(d.getHours())}-${pad2(d.getMinutes())}-${pad2(d.getSeconds())}`;
+}
+function slugify(it){
+  return String(it || "")
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9\s-]/g,"")
+    .trim()
+    .replace(/\s+/g,"-")
+    .replace(/-+/g,"-")
+    .slice(0, 50);
+}
+function keywordsFromQuestion(q){
+  const stop = new Set(["perche","perché","che","cosa","come","se","e","o","il","lo","la","i","gli","le","un","una","da","di","del","della","delle","dei","dello","in","su","a","al","alla","alle","agli","ai","con","senza","poi","subito","solo","nessuna","nessun","meglio","ha","senso","dopo","non","piu","più","anche"]);
+  const words = slugify(q).split("-").filter(w => w && !stop.has(w));
+  return words.slice(0, 4).join("-");
+}
+
+async function copyText(text){
+  const t = String(text || "");
+  if(!t.trim()) return false;
+  try{
+    await navigator.clipboard.writeText(t);
+    return true;
+  }catch(e){
+    const ta = document.createElement("textarea");
+    ta.value = t;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+    return true;
+  }
+}
+async function readClipboardText(){
+  return await navigator.clipboard.readText();
+}
+
+function captionWithHashtagsIfNeeded(clean){
+  const c = String(clean || "").trim();
+  if(!c) return "";
+
+  const lower = c.toLowerCase();
+  if (lower.includes("#immobiliarelasacra") || lower.includes("#josephcretorlab") || lower.includes("#realmediapro")){
+    return c;
+  }
+  return `${c}\n\n${HIDDEN_HASHTAGS}`.trim();
+}
+
+function setCaptionClean(clean){
+  lastCaptionClean = String(clean || "").trim();
+  $("captionPreview").textContent = lastCaptionClean || "—";
+  if ($("chkRememberCaption").checked){
+    try{ localStorage.setItem("vc_caption_clean", lastCaptionClean); }catch(e){}
+  }
+}
+
+/* ==========================
+   DATI IMMOBILE
+========================== */
+const PROPERTY_FIELDS = [
+  ["f_displayName","Nome visualizzato"],
+  ["f_mq","Metri Quadri"],
+  ["f_piano","Piano"],
+  ["f_locali","Locali"],
+  ["f_bagno","Bagno"],
+  ["f_riscaldamento","Riscaldamento"],
+  ["f_giardino","Giardino"],
+  ["f_garage","Garage/box"],
+  ["f_arredamento","Arredamento"],
+  ["f_ascensore","Ascensore"],
+  ["f_libero","Libero"],
+  ["f_classeImmobile","Classe Immobile"],
+  ["f_anno","Anno di Costruzione"],
+  ["f_ristrutturato","Ristrutturato"],
+];
+
+function getPropertyData(){
+  const data = {};
+  for(const [id,label] of PROPERTY_FIELDS){
+    const el = $(id);
+    if(!el) continue;
+    const v = String(el.value || "").trim();
+    if(v) data[label] = v;
+  }
+  return data;
+}
+
+function propertyDataToText(data){
+  const entries = Object.entries(data || {});
+  if(!entries.length) return "—";
+  return entries.map(([k,v]) => `- ${k}: ${v}`).join("\n");
+}
+
+function updatePropertyStatus(){
+  const data = getPropertyData();
+  const count = Object.keys(data).length;
+  $("propertyStatus").textContent = count ? `Dati: ${count} compilati` : "Dati: —";
+}
+
+function savePropertyToLS(){
+  try{
+    localStorage.setItem("vc_property_data", JSON.stringify(getPropertyData()));
+  }catch(e){}
+}
+
+function loadPropertyFromLS(){
+  try{
+    const raw = localStorage.getItem("vc_property_data");
+    if(!raw) return;
+    const obj = JSON.parse(raw);
+    for(const [id,label] of PROPERTY_FIELDS){
+      if(obj && obj[label] != null && $(id)) $(id).value = String(obj[label]);
+    }
+  }catch(e){}
+  updatePropertyStatus();
+}
+
+function clearProperty(){
+  for(const [id] of PROPERTY_FIELDS){
+    if($(id)) $(id).value = "";
+  }
+  try{ localStorage.removeItem("vc_property_data"); }catch(e){}
+  updatePropertyStatus();
+}
+
+/* ==========================
+   PROMPT
+========================== */
+function loadPrompt(){
+  try{
+    const saved = localStorage.getItem("vc_prompt_text");
+    promptText = (saved && saved.trim()) ? saved : BASE_PROMPT;
+  }catch(e){
+    promptText = BASE_PROMPT;
+  }
+  $("promptBox").value = promptText;
+}
+function lockPromptUI(){
+  $("promptBox").readOnly = true;
+  $("btnSavePrompt").disabled = true;
+  $("btnResetPrompt").disabled = true;
+  $("promptStatePill").textContent = "Bloccato";
+}
+function unlockPromptUI(){
+  $("promptBox").readOnly = false;
+  $("btnSavePrompt").disabled = false;
+  $("btnResetPrompt").disabled = false;
+  $("promptStatePill").textContent = "Sbloccato";
+}
+function savePrompt(){
+  promptText = $("promptBox").value || BASE_PROMPT;
+  try{ localStorage.setItem("vc_prompt_text", promptText); }catch(e){}
+}
+
+/* ==========================
+   QUESTIONS
+========================== */
+function showQuestionInOverlay(q){
+  $("questionBoxOverlay").textContent = q ? q : "Premi 'Nuova domanda'.";
+}
+function nextQuestion(){
+  qIdx = (qIdx + 1) % QUESTION_BANK.length;
+  currentQuestion = QUESTION_BANK[qIdx].q;
+  showQuestionInOverlay(currentQuestion);
+}
+
+/* ✅ MODIFICATO: include testo libero */
+function composeChatGPTInput(){
+  const q = String(currentQuestion || "").trim();
+  const freeText = String($("freeText").value || "").trim();
+
+  const data = getPropertyData();
+  const propertyBlock = propertyDataToText(data);
+
+  const base = (promptText || BASE_PROMPT).trim();
+
+  const inputParts = [];
+  inputParts.push("Dati immobile:");
+  inputParts.push(propertyBlock);
   
-  <!-- Load non-critical CSS -->
-  <link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'">
-  <noscript>
-    <link rel="stylesheet" href="styles.css">
-  </noscript>
+  if(freeText){
+    inputParts.push("");
+    inputParts.push("Testo libero aggiuntivo:");
+    inputParts.push(freeText);
+  }
+  
+  inputParts.push("");
+  inputParts.push("Richiesta:");
+  inputParts.push(`👉 ${q || "Crea una descrizione promozionale per questo immobile."}`);
+
+  return `${base}\n\nInput:\n${inputParts.join("\n")}`.trim();
+}
+
+/* ==========================
+   ROTAZIONE PROFILI
+========================== */
+function getRotationPlatforms(){
+  const items = [
+    { id:"rot_tiktok", platform:"tiktok" },
+    { id:"rot_instagram", platform:"instagram" },
+    { id:"rot_shorts", platform:"shorts" },
+    { id:"rot_facebook", platform:"facebook" },
+  ];
+  return items.filter(x => $(x.id).checked);
+}
+function setNextBadge(platform){
+  const map = {
+    tiktok: $("badge_tiktok"),
+    instagram: $("badge_instagram"),
+    shorts: $("badge_shorts"),
+    facebook: $("badge_facebook"),
+  };
+  Object.values(map).forEach(el => el.classList.remove("show"));
+  if(platform && map[platform]) map[platform].classList.add("show");
+}
+function getActivePlatform(){
+  const list = getRotationPlatforms();
+  if(list.length === 0) return null;
+  rotationIndex = rotationIndex % list.length;
+  return list[rotationIndex].platform;
+}
+function advancePlatform(){
+  const list = getRotationPlatforms();
+  if(list.length === 0) return;
+  rotationIndex = (rotationIndex + 1) % list.length;
+}
+function refreshProfileUI(){
+  const active = getActivePlatform();
+  setNextBadge(active);
+  $("activeProfileLabel").textContent = "Prossimo: " + (active ? active : "—");
+}
+
+/* ==========================
+   TELEPROMPTER SCROLL
+========================== */
+let startTimeSec = null;
+let isTeleprompterRunning = false;
+let teleprompterAnimationId = null;
+
+function resetTeleprompter(){
+  $("teleText").style.transform = "translateY(20px)";
+}
+function startTeleprompter(){
+  if(isTeleprompterRunning) return;
+  isTeleprompterRunning = true;
+  startTimeSec = performance.now() / 1000;
+  animateTele();
+}
+function stopTeleprompter(){
+  isTeleprompterRunning = false;
+  if(teleprompterAnimationId) cancelAnimationFrame(teleprompterAnimationId);
+  teleprompterAnimationId = null;
+}
+function restartTeleprompter(){
+  stopTeleprompter();
+  resetTeleprompter();
+  setTimeout(()=> startTeleprompter(), 120);
+}
+function animateTele(){
+  if(!isTeleprompterRunning) return;
+
+  const teleEl = $("teleText");
+  if(!teleEl){
+    teleprompterAnimationId = requestAnimationFrame(animateTele);
+    return;
+  }
+
+  const now = performance.now()/1000;
+  const elapsed = now - startTimeSec;
+  const progress = (elapsed % teleprompterSeconds) / teleprompterSeconds;
+
+  const th = teleEl.scrollHeight || 900;
+  const startY = 20;
+  const endY = -th - 20;
+
+  const y = startY + (endY - startY) * progress;
+  teleEl.style.transform = `translateY(${y}px)`;
+
+  teleprompterAnimationId = requestAnimationFrame(animateTele);
+}
+
+function applyAnswer(answer){
+  const a = String(answer || "").trim();
+  if(!a) return false;
+  $("teleText").textContent = a;
+  resetTeleprompter();
+  stopTeleprompter();
+  setCaptionClean(a);
+  return true;
+}
+
+/* ==========================
+   SPEED UI
+========================== */
+function setSpeed(seconds){
+  teleprompterSeconds = seconds;
+  $("speedLabel").textContent = `Vel: ${seconds}s`;
+  $("speed120").checked = seconds === 120;
+  $("speed105").checked = seconds === 105;
+  $("speed90").checked  = seconds === 90;
+}
+
+/* ==========================
+   CAMERA + REC
+========================== */
+let camStream = null;
+let chunks = [];
+let rafCanvasId = null;
+
+let zoomValue = 1.0;
+const camEl = $("cam");
+const canvas = $("recCanvas");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+async function applyZoom(v){
+  zoomValue = Number(v) || 1;
+  $("zoomVal").textContent = `${zoomValue.toFixed(1)}x`;
+  document.documentElement.style.setProperty("--zoom", String(zoomValue));
+}
+
+function drawFrame(){
+  const W = canvas.width, H = canvas.height;
+  if(camEl.readyState < 2){
+    ctx.fillStyle="black"; ctx.fillRect(0,0,W,H);
+    return;
+  }
+  const vw = camEl.videoWidth || 1280;
+  const vh = camEl.videoHeight || 720;
+
+  const z = Math.max(1, Math.min(zoomValue, 5));
+  const srcW = vw / z;
+  const srcH = vh / z;
+  const srcX = (vw - srcW)/2;
+  const srcY = (vh - srcH)/2;
+
+  ctx.drawImage(camEl, srcX, srcY, srcW, srcH, 0, 0, W, H);
+}
+function startCanvasLoop(){
+  function loop(){
+    drawFrame();
+    rafCanvasId = requestAnimationFrame(loop);
+  }
+  loop();
+}
+
+async function startCamera(){
+  if(camStream){
+    camStream.getTracks().forEach(t=>t.stop());
+    camStream = null;
+  }
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({
+      audio:true,
+      video:{ facingMode:"user", width:{ideal:1280}, height:{ideal:720} }
+    });
+    camEl.srcObject = camStream;
+    await new Promise(res => camEl.onloadedmetadata = () => res());
+    try{ await camEl.play(); }catch(e){}
+    if(!rafCanvasId) startCanvasLoop();
+    return true;
+  }catch(err){
+    alert("Errore camera: " + err.message);
+    return false;
+  }
+}
+async function ensureReady(){
+  if(!camStream){
+    const ok = await startCamera();
+    if(!ok) return false;
+  }
+  if(!rafCanvasId) startCanvasLoop();
+  return true;
+}
+
+/* REC lamp */
+let recStartTs = null;
+let recTimerId = null;
+let isRecording = false;
+let recorder = null;
+
+function fmtTime(ms){
+  const sec = Math.floor(ms/1000);
+  const m = String(Math.floor(sec/60)).padStart(2,"0");
+  const s = String(sec%60).padStart(2,"0");
+  return `${m}:${s}`;
+}
+function startRecLamp(){
+  recStartTs = Date.now();
+  $("recLamp").style.display = "flex";
+  $("recTime").textContent = "REC 00:00";
+  recTimerId = setInterval(()=> {
+    $("recTime").textContent = `REC ${fmtTime(Date.now()-recStartTs)}`;
+  }, 250);
+}
+function stopRecLamp(){
+  $("recLamp").style.display = "none";
+  if(recTimerId) clearInterval(recTimerId);
+  recTimerId = null;
+  recStartTs = null;
+}
+
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+}
+
+/* Recordings */
+let recordings = [];
+let currentRecIndex = -1;
+
+function updateCounters(){
+  $("videoCounter").textContent = `Video: ${totalVideos}`;
+}
+
+function renderRecList(){
+  const box = $("recList");
+  if(!recordings.length){ box.textContent = "—"; return; }
+
+  box.innerHTML = recordings.map((r,i)=>{
+    const active = i===currentRecIndex ? " style='color:#ffd700; font-weight:950;'" : "";
+    return `
+      <div ${active} style="margin-bottom:10px;">
+        <div>
+          <a href="#" data-i="${i}" style="color:inherit; text-decoration:none;">
+            ${r.title}
+          </a>
+        </div>
+        <div style="opacity:.85; margin-top:6px;">${(r.question||"").slice(0,95)}</div>
+      </div>
+    `;
+  }).join("");
+
+  box.querySelectorAll("a[data-i]").forEach(a => a.addEventListener("click", (e)=>{
+    e.preventDefault();
+    const i = +a.dataset.i;
+    currentRecIndex = i;
+    $("playback").src = recordings[i].url;
+    $("playback").play().catch(()=>{});
+    renderRecList();
+  }));
+}
+
+function buildVideoTitle(videoNum, platform, question){
+  const k = keywordsFromQuestion(question) || "video";
+  const p = platform || "noplatform";
+  return `#${String(videoNum).padStart(3,"0")} • ${p} • ${k}`;
+}
+function buildFileName(videoNum, platform, question){
+  const k = keywordsFromQuestion(question) || "video";
+  const p = platform || "noplatform";
+  return `video_${String(videoNum).padStart(3,"0")}_${p}_${k}_${nowStamp()}.webm`;
+}
+
+function startRecording(){
+  if(!camStream){ alert("Attiva la camera."); return; }
+  if(recorder && recorder.state !== "inactive"){ return; }
+
+  startTeleprompter();
+  chunks = [];
+
+  const stream = canvas.captureStream(30);
+  const audioTrack = camStream.getAudioTracks?.()[0];
+  if(audioTrack) stream.addTrack(audioTrack);
+
+  const mimeCandidates = [
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm"
+  ];
+  const mimeType = mimeCandidates.find(m => MediaRecorder.isTypeSupported(m)) || "";
+
+  recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+
+  recorder.ondataavailable = (e)=>{ if(e.data.size) chunks.push(e.data); };
+  recorder.onstart = ()=>{ isRecording = true; startRecLamp(); };
+
+  const qNow = String(currentQuestion || "").trim();
+  const capNow = String(lastCaptionClean || "").trim();
+  const platformNow = getActivePlatform();
+
+  recorder.onstop = ()=>{
+    stopRecLamp();
+    stopTeleprompter();
+    isRecording = false;
+
+    const blob = new Blob(chunks, { type: recorder.mimeType || "video/webm" });
+    totalVideos += 1;
+
+    const title = buildVideoTitle(totalVideos, platformNow, qNow);
+    const name = buildFileName(totalVideos, platformNow, qNow);
+    const url = URL.createObjectURL(blob);
+
+    recordings.unshift({ title, name, url, blob, question: qNow, captionClean: capNow, platform: platformNow });
+    currentRecIndex = 0;
+
+    $("playback").src = url;
+    $("playback").load();
+    renderRecList();
+    updateCounters();
+
+    advancePlatform();
+    refreshProfileUI();
+  };
+
+  recorder.start(1000);
+}
+function stopRecording(){
+  if(recorder && recorder.state !== "inactive") recorder.stop();
+}
+
+/* ==========================
+   ✅ WHATSAPP INVIA FUNZIONE
+========================== */
+function sendToWhatsApp() {
+  const caption = captionWithHashtagsIfNeeded(lastCaptionClean);
+  if (!caption.trim()) {
+    alert("Prima genera una caption (usa 'Invia al teleprompter' o 'Copia caption').");
+    return;
+  }
+  
+  const encodedMessage = encodeURIComponent(caption);
+  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+  
+  window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+}
+
+/* ==========================
+   NAV
+========================== */
+function goToGestionale(){
+  if(confirm("Vuoi tornare al gestionale?")){
+    if(isRecording) stopRecording();
+    setTimeout(()=> window.location.href = GESTIONALE_URL, 250);
+  }
+}
+
+/* ==========================
+   INIT
+========================== */
+document.addEventListener("DOMContentLoaded", ()=>{
+  // prompt
+  loadPrompt();
+  lockPromptUI();
+
+  // load property data + listeners
+  loadPropertyFromLS();
+  PROPERTY_FIELDS.forEach(([id])=>{
+    if($(id)){
+      $(id).addEventListener("input", ()=>{ updatePropertyStatus(); savePropertyToLS(); });
+      $(id).addEventListener("change", ()=>{ updatePropertyStatus(); savePropertyToLS(); });
+    }
+  });
+  $("btnClearProperty").addEventListener("click", clearProperty);
+
+  // testo libero salvataggio
+  $("freeText").addEventListener("input", function() {
+    try{ localStorage.setItem("vc_free_text", this.value); }catch(e){}
+  });
+  // carica testo libero salvato
+  try{
+    const savedFreeText = localStorage.getItem("vc_free_text") || "";
+    if(savedFreeText) $("freeText").value = savedFreeText;
+  }catch(e){}
+
+  // blocco risposta: vuoto di default
+  $("answerBox").value = "";
+
+  // restore caption preview only
+  try{
+    const savedCap = localStorage.getItem("vc_caption_clean") || "";
+    if(savedCap.trim() && $("chkRememberCaption").checked){
+      setCaptionClean(savedCap);
+    }
+  }catch(e){}
+
+  // init UI
+  $("btnBackTop").addEventListener("click", goToGestionale);
+  $("btnBackBottom").addEventListener("click", goToGestionale);
+
+  $("teleText").textContent = "Incolla/scrivi una risposta in alto → 'Invia al teleprompter' → 'Teleprompter + REC'.";
+  showQuestionInOverlay("Premi 'Nuova domanda'.");
+  updateCounters();
+  refreshProfileUI();
+  renderRecList();
+  resetTeleprompter();
+  applyZoom(1.0);
+  setSpeed(105);
+
+  // speed radio-like
+  $("speed120").addEventListener("change", (e)=>{ if(e.target.checked) setSpeed(120); });
+  $("speed105").addEventListener("change", (e)=>{ if(e.target.checked) setSpeed(105); });
+  $("speed90").addEventListener("change", (e)=>{ if(e.target.checked) setSpeed(90); });
+
+  // rotation change resets index
+  ["rot_tiktok","rot_instagram","rot_shorts","rot_facebook"].forEach(id=>{
+    $(id).addEventListener("change", ()=>{
+      rotationIndex = 0;
+      refreshProfileUI();
+    });
+  });
+
+  // nuova domanda
+  $("btnNext").addEventListener("click", ()=> nextQuestion());
+
+  // apri chatgpt + copia prompt+domanda (+ dati immobile + testo libero)
+  $("btnOpenChatGPTPasteQ").addEventListener("click", async ()=>{
+    if(!currentQuestion){
+      nextQuestion();
+    }
+    const payload = composeChatGPTInput();
+    await copyText(payload);
+    window.open(CHATGPT_URL, "_blank", "noopener");
+  });
+
+  // incolla risposta
+  $("btnPasteTop").addEventListener("click", async ()=>{
+    try{
+      const t = await readClipboardText();
+      $("answerBox").value = (t || "");
+    }catch(e){
+      alert("Clipboard bloccata: incolla manualmente nel blocco risposta.");
+    }
+  });
+
+  // ✅ WHATSAPP INVIA
+  $("btnSendWhatsApp").addEventListener("click", sendToWhatsApp);
+
+  // invia al teleprompter
+  $("btnSendTele").addEventListener("click", ()=>{
+    const ok = applyAnswer($("answerBox").value || "");
+    if(!ok) alert("Scrivi o incolla una risposta prima.");
+  });
+
+  // camera
+  $("btnCam").addEventListener("click", async ()=>{ await ensureReady(); });
+
+  // Teleprompter + REC
+  $("btnTeleRec").addEventListener("click", async ()=>{
+    const okCam = await ensureReady();
+    if(!okCam) return;
+
+    if(!currentQuestion){
+      nextQuestion();
+    }
+
+    const ans = ($("answerBox").value || "").trim();
+    if(!ans){
+      alert("Scrivi o incolla una risposta (o usa 'Incolla risposta') prima di registrare.");
+      return;
+    }
+
+    applyAnswer(ans);
+    startRecording();
+  });
+
+  $("btnStop").addEventListener("click", ()=> stopRecording());
+  $("btnRestart").addEventListener("click", ()=> restartTeleprompter());
+  $("zoom").addEventListener("input", (e)=> applyZoom(e.target.value));
+
+  // remember caption toggle
+  $("chkRememberCaption").addEventListener("change", ()=>{
+    if(!$("chkRememberCaption").checked){
+      try{ localStorage.removeItem("vc_caption_clean"); }catch(e){}
+    }else{
+      try{ localStorage.setItem("vc_caption_clean", lastCaptionClean || ""); }catch(e){}
+    }
+  });
+
+  // copia caption
+  $("btnCopyCaption").addEventListener("click", async ()=>{
+    const out = captionWithHashtagsIfNeeded(lastCaptionClean);
+    if(!out){ alert("Niente da copiare."); return; }
+    await copyText(out);
+  });
+
+  // download selected video
+  $("btnDownloadVideo").addEventListener("click", ()=>{
+    if(currentRecIndex < 0 || !recordings[currentRecIndex]){
+      alert("Seleziona un video dalla lista.");
+      return;
+    }
+    const r = recordings[currentRecIndex];
+    downloadBlob(r.blob, r.name);
+  });
+
+  // clear list
+  $("btnClearList").addEventListener("click", ()=>{
+    if(!recordings.length) return;
+    if(confirm("Svuotare la lista?")){
+      recordings.forEach(r => { try{ URL.revokeObjectURL(r.url); }catch(e){} });
+      recordings = [];
+      currentRecIndex = -1;
+      $("playback").removeAttribute("src");
+      $("playback").load();
+      renderRecList();
+      totalVideos = 0;
+      updateCounters();
+      rotationIndex = 0;
+      refreshProfileUI();
+    }
+  });
+
+  // prompt unlock/save/reset
+  $("btnUnlock").addEventListener("click", ()=>{
+    const code = ($("unlockCode").value || "").trim();
+    if(code === UNLOCK_CODE){
+      unlockPromptUI();
+    }else{
+      alert("Codice errato.");
+      lockPromptUI();
+    }
+  });
+
+  $("btnSavePrompt").addEventListener("click", ()=>{
+    savePrompt();
+    lockPromptUI();
+    $("unlockCode").value = "";
+  });
+
+  $("btnResetPrompt").addEventListener("click", ()=>{
+    $("promptBox").value = BASE_PROMPT;
+    savePrompt();
+    lockPromptUI();
+    $("unlockCode").value = "";
+  });
+
+  /* ==========================
+     ISTRUZIONI (MODAL)
+  ========================== */
+  const modal = $("instructionsModal");
+  function openInstructions(){
+    modal.classList.add("show");
+    modal.setAttribute("aria-hidden","false");
+  }
+  function closeInstructions(){
+    modal.classList.remove("show");
+    modal.setAttribute("aria-hidden","true");
+  }
+
+  $("btnInstructions").addEventListener("click", openInstructions);
+  $("btnCloseInstructions").addEventListener("click", closeInstructions);
+
+  // Chiudi cliccando fuori dalla card
+  modal.addEventListener("click", (e)=>{
+    if(e.target === modal) closeInstructions();
+  });
+
+  // Chiudi con ESC
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape" && modal.classList.contains("show")) closeInstructions();
+  });
+
+  /* ==========================
+     UPLOAD VIDEO
+  ========================== */
+  $("btnUploadVideo").addEventListener("click", ()=>{
+    $("uploadVideo").click();
+  });
+
+  $("uploadVideo").addEventListener("change", ()=>{
+    const file = $("uploadVideo").files && $("uploadVideo").files[0];
+    if(!file) return;
+
+    const url = URL.createObjectURL(file);
+
+    totalVideos += 1;
+
+    const platformNow = "upload";
+    const qNow = String(currentQuestion || "").trim();
+    const title = `#${String(totalVideos).padStart(3,"0")} • ${platformNow} • file`;
+
+    recordings.unshift({
+      title,
+      name: file.name || `upload_${nowStamp()}.webm`,
+      url,
+      blob: file,
+      question: qNow,
+      captionClean: lastCaptionClean || "",
+      platform: platformNow
+    });
+
+    currentRecIndex = 0;
+    $("playback").src = url;
+    $("playback").load();
+    renderRecList();
+    updateCounters();
+
+    // reset per permettere ricarica stesso file
+    $("uploadVideo").value = "";
+  });
+});
+</script>
 </body>
-</html>uli separati:
-// 1. camera.js - Gestione webcam e recording
-// 2. teleprompter.js - Scroll e controlli
-// 3. storage.js - LocalStorage e IndexedDB
-// 4. ui.js - Gestione interfaccia
-// 5. export.js - Download e condivisione
+</html>
