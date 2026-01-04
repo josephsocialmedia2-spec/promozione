@@ -2146,5 +2146,23 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+
+<!-- ADDITION: force external (rear) camera instead of internal -->
+<script>
+(function(){
+  const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+  navigator.mediaDevices.getUserMedia = function(constraints){
+    if (constraints && constraints.video) {
+      if (typeof constraints.video === 'object') {
+        constraints.video.facingMode = { exact: "environment" };
+      } else {
+        constraints.video = { facingMode: { exact: "environment" } };
+      }
+    }
+    return originalGetUserMedia(constraints);
+  };
+})();
+</script>
+
 </body>
 </html>
