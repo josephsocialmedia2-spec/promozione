@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="it">
 <head>
@@ -585,6 +586,58 @@
       border-color: rgba(37, 211, 102, 0.8);
     }
   </style>
+
+<style>
+/* ADDITION: move Teleprompter + REC controls to the left */
+#recordControls,
+.controls,
+.teleprompter-controls {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+</style>
+
+
+<style>
+/* ADDITION: layout controls exactly as requested */
+.teleprompter-controls,
+#recordControls,
+.controls {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+.teleprompter-controls > *:nth-child(1) {
+  margin-right: auto !important;
+}
+</style>
+
+
+<style>
+/* ADDITION: Zoom layout as requested */
+.zoom-controls,
+#zoomControls {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+}
+
+.zoom-controls input[type="range"],
+#zoomControls input[type="range"] {
+  flex: 1 1 auto !important;
+  min-width: 240px !important;
+}
+
+.zoom-value,
+#zoomValue {
+  min-width: 52px !important;
+  text-align: center !important;
+  font-weight: 600 !important;
+}
+</style>
+
 </head>
 
 <body>
@@ -628,7 +681,7 @@
 
   <div class="hintTop">
     <b>FLUSSO RAPIDO:</b> 1) <b>Nuova domanda</b> → 2) <b>Apri ChatGPT</b> (copia automatica) → 3) ChatGPT genera → 4) <b>Incolla risposta</b> → 
-    5) <b>Invia al teleprompter</b> → 6) <b>Teleprompter + REC</b> → 7) <b>Invia su WhatsApp</b> (caption completa)
+    5) <b/b> → 6) <b>Teleprompter + REC</b> → 7) <b>Invia su WhatsApp</b> (caption completa)
   </div>
 
   <!-- ✅ DATI IMMOBILE -->
@@ -639,6 +692,9 @@
       <div class="grid2">
         <div class="field">
           <input id="f_displayName" placeholder="Nome visualizzato (es: Trilocale Luminoso)" />
+        </div>
+        <div class="field">
+          <input id="f_price" placeholder="Prezzo immobile (es: 320.000€)" />
         </div>
         <div class="field">
           <input id="f_mq" type="number" min="0" step="1" placeholder="Metri Quadri (mq)" />
@@ -745,7 +801,7 @@
       </div>
 
       <div class="bar left" style="margin-top:10px;">
-        <button class="btn primary" id="btnSendTele" type="button"><span class="ico">➡️</span> Invia al teleprompter</button>
+        <button class="btn primary" id="btnSendTele" type="button"><span class="ico">➡️</span> </button>
         <button class="btn gray" id="btnCopyCaption" type="button" title="Copia caption con hashtag (se non già presenti)">
           <span class="ico">📋</span> Copia caption
         </button>
@@ -776,7 +832,7 @@
               <div id="overlay">
                 <div id="questionBoxOverlay">Premi "Nuova domanda".</div>
                 <div id="teleprompterOverlay">
-                  <div id="teleText">Incolla/scrivi una risposta in alto → "Invia al teleprompter" → "Teleprompter + REC".</div>
+                  <div id="teleText">Incolla/scrivi una risposta in alto → "" → "Teleprompter + REC".</div>
                 </div>
               </div>
             </div>
@@ -942,7 +998,7 @@
         <li><b>Usa "Testo libero"</b> per aggiungere dettagli extra (opzionale).</li>
         <li><b>Premi "Nuova domanda"</b> finché trovi la domanda giusta.</li>
         <li><b>Premi "Apri ChatGPT + copia domanda"</b> → incolla su ChatGPT → invia → copia la risposta.</li>
-        <li><b>Premi "Incolla risposta"</b> e poi <b>"Invia al teleprompter"</b>.</li>
+        <li><b>Premi "Incolla risposta"</b> e poi <b>""</b>.</li>
         <li><b>Premi "Teleprompter + REC"</b> per registrare con teleprompter e timer REC.</li>
         <li><b>Premi "Invia su WhatsApp"</b> per inviare la caption completa con hashtag.</li>
       </ol>
@@ -962,7 +1018,7 @@
 
       <p class="h" style="margin:0 0 8px;">Modalità rapida</p>
       <p style="margin:0;">
-        Puoi <b>scrivere direttamente</b> nel campo "Risposta" e usare "Invia al teleprompter" senza passare da ChatGPT.
+        Puoi <b>scrivere direttamente</b> nel campo "Risposta" e usare "" senza passare da ChatGPT.
         Ideale per testi brevi o quando hai già il contenuto pronto.
       </p>
     </div>
@@ -1125,6 +1181,10 @@ const PROPERTY_FIELDS = [
   ["f_ristrutturato","Ristrutturato"],
 ];
 
+// Campo aggiuntivo (prezzo immobile)
+PROPERTY_FIELDS.splice(1, 0, ["f_price","Prezzo immobile"]);
+
+
 function getPropertyData(){
   const data = {};
   for(const [id,label] of PROPERTY_FIELDS){
@@ -1207,7 +1267,7 @@ function savePrompt(){
    QUESTIONS
 ========================== */
 function showQuestionInOverlay(q){
-  $("questionBoxOverlay").textContent = q ? q : "Premi 'Nuova domanda'.";
+  $("questionBoxOverlay").textContent = q ? q : "";
 }
 function nextQuestion(){
   qIdx = (qIdx + 1) % QUESTION_BANK.length;
@@ -1385,6 +1445,107 @@ function drawFrame(){
   const srcY = (vh - srcH)/2;
 
   ctx.drawImage(camEl, srcX, srcY, srcW, srcH, 0, 0, W, H);
+
+  // Overlay: prezzo (sopra) + nome visualizzato (sotto)
+  drawTopOverlay(W, H);
+
+}
+
+function drawTopOverlay(W, H){
+  const priceEl = $("f_price");
+  const nameEl = $("f_displayName");
+
+  const priceRaw = priceEl ? String(priceEl.value || "").trim() : "";
+  const nameRaw  = nameEl ? String(nameEl.value  || "").trim() : "";
+
+  if(!priceRaw && !nameRaw) return;
+
+  let priceText = priceRaw;
+  const num = Number(priceRaw.replace(/[^\d]/g, ""));
+  if(Number.isFinite(num) && num > 0){
+    try{
+      priceText = "€ " + num.toLocaleString("it-IT");
+    }catch(e){
+      priceText = "€ " + String(num);
+    }
+  }else if(priceRaw){
+    // se l'utente inserisce già simboli/testo, lo lasciamo com'è
+    priceText = priceRaw;
+  }
+
+  ctx.save();
+
+  const padX = Math.round(W * 0.04);
+  const padY = Math.round(H * 0.035);
+
+  const maxW = W - padX*2;
+
+  // Dimensioni font scalabili
+  const priceFont = Math.max(22, Math.round(H * 0.06));
+  const nameFont  = Math.max(16, Math.round(H * 0.04));
+
+  // Blocchetto alto centrato
+  const centerX = Math.round(W/2);
+
+  // Background semi-trasparente (facoltativo, migliora leggibilità)
+  const lines = [];
+  if(priceText) lines.push({ text: priceText, font: `700 ${priceFont}px system-ui, -apple-system, Segoe UI, Roboto, Arial` });
+  if(nameRaw)   lines.push({ text: nameRaw,   font: `600 ${nameFont}px system-ui, -apple-system, Segoe UI, Roboto, Arial` });
+
+  let y = padY;
+
+  // calcolo altezza blocco
+  let blockH = 0;
+  for(const l of lines){
+    ctx.font = l.font;
+    blockH += Math.round((ctx.measureText("Mg").actualBoundingBoxAscent || (l === lines[0] ? priceFont : nameFont)) + (ctx.measureText("Mg").actualBoundingBoxDescent || 0));
+    blockH += Math.round(H * 0.01);
+  }
+  blockH += Math.round(H * 0.02);
+
+  const bgX = padX;
+  const bgY = padY - Math.round(H * 0.01);
+  const bgW = maxW;
+  const bgH = blockH;
+
+  ctx.fillStyle = "rgba(0,0,0,0.35)";
+  ctx.beginPath();
+  const r = Math.round(H * 0.02);
+  // rounded rect
+  const x=bgX, yy=bgY, w=bgW, h=bgH;
+  ctx.moveTo(x+r, yy);
+  ctx.arcTo(x+w, yy, x+w, yy+h, r);
+  ctx.arcTo(x+w, yy+h, x, yy+h, r);
+  ctx.arcTo(x, yy+h, x, yy, r);
+  ctx.arcTo(x, yy, x+w, yy, r);
+  ctx.closePath();
+  ctx.fill();
+
+  // testo
+  y = padY + Math.round(H * 0.03);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  ctx.fillStyle = "white";
+  ctx.shadowColor = "rgba(0,0,0,0.45)";
+  ctx.shadowBlur = Math.round(H * 0.01);
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = Math.round(H * 0.004);
+
+  for(const l of lines){
+    ctx.font = l.font;
+    // riduzione font se troppo largo
+    let fontSize = parseInt(l.font.match(/(\d+)px/)[1], 10);
+    let t = l.text;
+    while(ctx.measureText(t).width > maxW && fontSize > 12){
+      fontSize -= 2;
+      l.font = l.font.replace(/(\d+)px/, `${fontSize}px`);
+      ctx.font = l.font;
+    }
+    ctx.fillText(t, centerX, y);
+    y += Math.round(fontSize * 1.15);
+  }
+
+  ctx.restore();
 }
 function startCanvasLoop(){
   function loop(){
@@ -1571,7 +1732,7 @@ function stopRecording(){
 function sendToWhatsApp() {
   const caption = captionWithHashtagsIfNeeded(lastCaptionClean);
   if (!caption.trim()) {
-    alert("Prima genera una caption (usa 'Invia al teleprompter' o 'Copia caption').");
+    alert("Prima genera una caption (usa '' o 'Copia caption').");
     return;
   }
   
@@ -1634,8 +1795,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
   $("btnBackTop").addEventListener("click", goToGestionale);
   $("btnBackBottom").addEventListener("click", goToGestionale);
 
-  $("teleText").textContent = "Incolla/scrivi una risposta in alto → 'Invia al teleprompter' → 'Teleprompter + REC'.";
-  showQuestionInOverlay("Premi 'Nuova domanda'.");
+  $("teleText").textContent = "";
+  showQuestionInOverlay("");
   updateCounters();
   refreshProfileUI();
   renderRecList();
