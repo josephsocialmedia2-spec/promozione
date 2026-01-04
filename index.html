@@ -638,6 +638,45 @@
 }
 </style>
 
+
+<style>
+/* ADDITION: force control bar layout exactly like reference */
+.teleprompter-controls,
+#recordControls,
+.controls {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 14px !important;
+}
+
+.teleprompter-controls > * {
+  flex: 0 0 auto !important;
+}
+
+.teleprompter-controls > *:first-child {
+  margin-right: auto !important;
+}
+</style>
+
+
+<style>
+/* ADDITION: lock control bar position on mobile */
+@media (max-width: 768px) {
+  .teleprompter-controls,
+  #recordControls,
+  .controls {
+    position: fixed !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: env(safe-area-inset-bottom, 0) !important;
+    padding: 12px 10px !important;
+    z-index: 9999 !important;
+  }
+}
+</style>
+
 </head>
 
 <body>
@@ -2008,5 +2047,31 @@ document.addEventListener("DOMContentLoaded", ()=>{
   });
 });
 </script>
+
+<!-- ADDITION: Block ChatGPT integration and remove generated texts -->
+<script>
+/* Block creation logic */
+window.openChatGPTAndCopyPrompt = function(){};
+window.buildTeleprompterPrompt = function(){ return ""; };
+window.getNextQuestion = function(){};
+
+/* Remove any residual UI texts related to ChatGPT integration */
+document.addEventListener("DOMContentLoaded", () => {
+  const blockers = [
+    /ChatGPT/gi,
+    /Nuova domanda/gi,
+    /prompt/gi,
+    /domanda/gi
+  ];
+  document.querySelectorAll("body *").forEach(el => {
+    if (el.children.length === 0 && el.textContent) {
+      blockers.forEach(rx => {
+        if (rx.test(el.textContent)) el.textContent = "";
+      });
+    }
+  });
+});
+</script>
+
 </body>
 </html>
