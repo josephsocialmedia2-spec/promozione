@@ -677,6 +677,79 @@
 }
 </style>
 
+
+<style>
+/* ADDITION: force layout from stacked (photo 1) to single-row (photo 2), including mobile */
+.teleprompter-controls,
+#recordControls,
+.controls {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  gap: 14px !important;
+}
+
+/* Keep buttons on one line on small screens; allow horizontal scroll if ultra-narrow */
+@media (max-width: 420px) {
+  .teleprompter-controls,
+  #recordControls,
+  .controls {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .teleprompter-controls::-webkit-scrollbar,
+  #recordControls::-webkit-scrollbar,
+  .controls::-webkit-scrollbar {
+    height: 0 !important;
+  }
+}
+</style>
+
+
+<style>
+/* ADDITION: enforce controls layout (Camera | Stop | Riavvia tele | Teleprompter+REC) like reference */
+.controlsRow .bar.between {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: nowrap !important;
+  width: 100% !important;
+}
+
+.controlsRow .ctrlLeft,
+.controlsRow .ctrlMid,
+.controlsRow .ctrlRight {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+}
+
+.controlsRow .ctrlMid {
+  gap: 12px !important;
+}
+
+.controlsRow .ctrlRight {
+  justify-content: flex-end !important;
+}
+
+/* Mobile: keep same single-row layout; allow horizontal scroll only if ultra narrow */
+@media (max-width: 768px) {
+  .controlsRow .bar.between {
+    flex-direction: row !important;
+  }
+}
+@media (max-width: 420px) {
+  .controlsRow .bar.between {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  .controlsRow .bar.between::-webkit-scrollbar { height: 0 !important; }
+}
+</style>
+
 </head>
 
 <body>
