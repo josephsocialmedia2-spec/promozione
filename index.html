@@ -1,2168 +1,1496 @@
-
 <!doctype html>
 <html lang="it">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>Video Creator – Teleprompter Immobiliare</title>
-
+  <title>WebTok PRO — Recorder + Feed + Teleprompter + Ticker + IndexedDB</title>
   <style>
-    :root{
-      --bg:#000000;
-      --text:#f3f4f6;
-      --muted:#a0adb8;
-      --gold:#ffd700;
-      --border: rgba(255,255,255,0.15);
-      --shadow: 0 14px 50px rgba(0,0,0,0.55);
-      --radius: 18px;
-      --sans: system-ui, -apple-system, Segoe UI, Roboto, Arial;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-
-      --tele-font: 12px;
-      --tele-line: 1.22;
-      --stage-w: min(420px, 92vw);
-      --zoom: 1;
-    }
-
-    *{ box-sizing:border-box; }
+    :root { color-scheme: dark; }
+    *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
     body{
-      margin:0;
-      font-family:var(--sans);
-      color:var(--text);
-      background: var(--bg);
-      min-height: 100vh;
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background:#07070a; color:#fff;
+      height:100vh; overflow:hidden;
+    }
+    .app{
+      width:min(460px, 100vw);
+      height:100vh;
+      margin:0 auto;
+      position:relative;
+      background:#000;
     }
 
-    .wrap{ max-width:1150px; margin:0 auto; padding:14px 12px 84px; }
+    /* FEED */
+    .feed{
+      position:absolute; inset:0;
+      overflow-y:auto;
+      scroll-snap-type:y mandatory;
+      scroll-behavior:smooth;
+      -webkit-overflow-scrolling: touch;
+      background:#000;
+    }
+    .page{
+      height:100vh;
+      scroll-snap-align:start;
+      position:relative;
+      background:#000;
+      overflow:hidden;
+    }
+    .page video{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+      background:#000;
+    }
+    .page .shade{
+      position:absolute; inset:0;
+      background:
+        linear-gradient(to top, rgba(0,0,0,.65), transparent 40%),
+        linear-gradient(to bottom, rgba(0,0,0,.35), transparent 35%);
+      pointer-events:none;
+    }
 
-    header{
+    /* REC SCREEN */
+    .recScreen{
+      position:absolute; inset:0;
+      background:#000;
+      display:none;
+    }
+    .recScreen.active{ display:block; }
+
+    .recStage{
+      position:absolute; inset:0;
+      background:#000;
+      overflow:hidden;
+    }
+    .recStage video, .recStage canvas{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      object-fit:cover;
+    }
+    .recStage canvas{ display:none; } /* record source */
+
+    /* Preview mirror (optional) */
+    .mirrorPreview{
+      transform: scaleX(-1);
+    }
+
+    /* HUD */
+    .hud{
+      position:absolute; inset:0;
+      padding:16px;
       display:flex;
-      align-items:center;
+      flex-direction:column;
       justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:10px;
+      pointer-events:none;
+      z-index:5;
     }
-
     .row{
       display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      align-items:center;
-    }
-
-    .btn{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.06);
-      color:var(--text);
-      padding:8px 10px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:950;
-      letter-spacing:.2px;
-      font-size:11px;
-      line-height:1;
-      white-space:nowrap;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      user-select:none;
-      position:relative;
-      transform: translateY(0) scale(1);
-      transition: transform .14s ease, filter .14s ease, box-shadow .14s ease, border-color .14s ease;
-      box-shadow: 0 10px 22px rgba(0,0,0,.25);
-      overflow:hidden;
-    }
-    .btn::after{
-      content:"";
-      position:absolute;
-      inset:-2px;
-      background: radial-gradient(500px 140px at 20% 0%, rgba(255,255,255,.14), transparent 60%),
-                  radial-gradient(500px 140px at 80% 100%, rgba(255,255,255,.10), transparent 55%);
-      opacity:0;
-      transition: opacity .18s ease;
-      pointer-events:none;
-    }
-    .btn:hover{
-      transform: translateY(-2px) scale(1.01);
-      border-color: rgba(255,215,0,.35);
-      box-shadow: 0 14px 34px rgba(0,0,0,.40);
-      filter: brightness(1.1);
-    }
-    .btn:hover::after{ opacity:1; }
-    .btn:active{
-      transform: translateY(0px) scale(.99);
-      filter: brightness(0.98);
-    }
-
-    .btn.tiny{
-      padding:6px 9px;
-      font-size:10px;
-      border-radius:11px;
-      box-shadow:none;
-    }
-
-    .btn.primary{
-      background: linear-gradient(135deg, rgba(255,215,0,.95), rgba(255,215,0,.75));
-      color:#000;
-      border-color: rgba(255,215,0,.55);
-      font-weight: 1000;
-    }
-    .btn.blue{
-      background: linear-gradient(135deg, rgba(57,90,140,.95), rgba(57,90,140,.70));
-      border-color: rgba(57,90,140,.55);
-    }
-    .btn.violet{
-      background: linear-gradient(135deg, rgba(123,79,189,.95), rgba(123,79,189,.70));
-      border-color: rgba(123,79,189,.55);
-    }
-    .btn.gray{ background: rgba(255,255,255,.06); }
-    
-    /* ✅ BOTTONI DOMANDA IN GIALLO */
-    .btn.question-btn {
-      background: linear-gradient(135deg, rgba(255,215,0,.95), rgba(255,215,0,.75));
-      color: #000;
-      border-color: rgba(255,215,0,.55);
-      font-weight: 1000;
-    }
-
-    .btn.rec{
-      background: linear-gradient(135deg, rgba(255,45,45,.95), rgba(255,45,45,.55));
-      border-color: rgba(255,45,45,.55);
-      color:#120707;
-      font-weight: 1000;
-    }
-    .btn.rec .dot{
-      width:10px; height:10px; border-radius:999px;
-      background:#ff2d2d;
-      box-shadow: 0 0 0 0 rgba(255,45,45,.45);
-      animation: pulseDot 1.15s ease-in-out infinite;
-    }
-    @keyframes pulseDot{
-      0%{ box-shadow: 0 0 0 0 rgba(255,45,45,.45); transform: scale(1); }
-      60%{ box-shadow: 0 0 0 10px rgba(255,45,45,0); transform: scale(1.06); }
-      100%{ box-shadow: 0 0 0 0 rgba(255,45,45,0); transform: scale(1); }
-    }
-
-    .btn .ico{
-      display:inline-flex;
-      transform: translateY(0);
-      transition: transform .16s ease;
-    }
-    .btn:hover .ico{
-      transform: translateY(-1px) rotate(-2deg);
-    }
-
-    .pill{
-      font-size:10px;
-      color:var(--muted);
-      padding:6px 10px;
-      border:1px solid var(--border);
-      border-radius:999px;
-      background:rgba(0,0,0,.25);
-      font-weight:900;
-      letter-spacing:.2px;
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      white-space:nowrap;
-    }
-
-    .hintTop{
-      margin: 6px 0 10px;
-      font-size:11px;
-      color: var(--muted);
-      line-height: 1.35;
-      background: rgba(255,255,255,.03);
-      padding: 10px 12px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.08);
-    }
-
-    .layout{
-      display:grid;
-      grid-template-columns: 1fr 360px;
-      gap:12px;
-      align-items:start;
-      margin-top:12px;
-    }
-    @media (max-width: 980px){ .layout{ grid-template-columns:1fr; } }
-
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .section{ padding:12px; }
-    .section + .section{ border-top:1px solid rgba(255,255,255,.10); }
-
-    .h{
-      margin:0 0 8px;
-      font-size:10px;
-      color:var(--muted);
-      text-transform:uppercase;
-      letter-spacing:.8px;
-      font-weight:950;
-    }
-
-    .stageRow{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-      align-items:start;
-    }
-    @media (max-width: 980px){ .stageRow{ grid-template-columns:1fr; } }
-
-    .stageBlock{
-      width: var(--stage-w);
-      margin: 0 auto;
-      display:flex;
-      flex-direction:column;
-      align-items:stretch;
-    }
-
-    #stage916{
-      width: 100%;
-      aspect-ratio: 9 / 16;
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 18px;
-      overflow: hidden;
-      position: relative;
-      background:#000;
-      box-shadow: var(--shadow);
-    }
-
-    #cam{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      object-fit: cover;
-      transform: scale(var(--zoom));
-      transform-origin: center;
-    }
-
-    #overlay{
-      position:absolute;
-      inset:0;
-      padding: 10px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      pointer-events:none;
-      z-index: 2;
-    }
-
-    #questionBoxOverlay{
-      font-size: 11px;
-      font-weight: 950;
-      line-height: 1.15;
-      padding: 7px 9px;
-      border-radius: 12px;
-      background: rgba(0,0,0,.35);
-      border: 1px solid rgba(255,255,255,.18);
-      backdrop-filter: blur(6px);
-      white-space:pre-wrap;
-    }
-
-    #teleprompterOverlay{
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      border-radius: 12px;
-    }
-
-    #teleText{
-      position:absolute;
-      left:0; right:0;
-      white-space: pre-wrap;
-      font-size: var(--tele-font);
-      line-height: var(--tele-line);
-      font-weight: 800;
-      color: rgba(243,244,246,.96);
-      text-shadow: 0 2px 12px rgba(0,0,0,.85);
-      transform: translateY(20px);
-    }
-
-    .controlsRow{
-      margin-top:10px;
-      display:flex;
-      flex-direction:column;
       gap:10px;
-      align-items:stretch;
+      align-items:flex-start;
+      justify-content:space-between;
+      pointer-events:auto;
     }
-    .bar{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:center;
-      align-items:center;
-    }
-    .bar.left{ justify-content:flex-start; }
-    .bar.between{ justify-content:space-between; }
-
-    .sliderRow{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      color:var(--muted);
-      font-size:10px;
-      font-weight:950;
-      flex-wrap:wrap;
-      justify-content:center;
-    }
-    input[type="range"]{ width:170px; accent-color: var(--gold); }
-
-    .chk{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      user-select:none;
-      color:var(--muted);
-      font-weight:950;
-      font-size:10px;
-      white-space:nowrap;
-    }
-    .check{
-      width:16px; height:16px;
-      accent-color: var(--gold);
-      cursor:pointer;
-    }
-
-    .field textarea{
+    .pill{
       width:100%;
+      display:flex; gap:10px; align-items:center;
       padding:10px 12px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.15);
-      background:rgba(0,0,0,.25);
-      color:var(--text);
-      outline:none;
-      font-weight:850;
-      resize: vertical;
-      min-height: 120px;
-      font-size:12px;
-      line-height:1.25;
+      border-radius:16px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.16);
+      backdrop-filter: blur(10px);
     }
-    .field textarea:focus{
-      border-color: rgba(255,215,0,.55);
-      box-shadow: 0 0 0 6px rgba(255,215,0,.15);
+    .pill input, .pill textarea{
+      width:100%;
+      background:transparent;
+      border:0; outline:0;
+      color:#fff;
+      font-weight:650;
+      font-size:14px;
+      resize:none;
     }
-
-    .mini{
-      font-family:var(--mono);
-      font-size:12px;
-      color:var(--muted);
-      white-space:pre-wrap;
-      word-break:break-word;
-      background:rgba(0,0,0,.25);
-      border:1px solid rgba(255,255,255,.15);
-      border-radius:14px;
-      padding:10px;
-    }
-
-    /* Profili piccoli */
-    .profiles{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:7px;
-      margin-top:8px;
-    }
-    .profileRow{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      padding:7px 8px;
-      border:1px solid rgba(255,255,255,.15);
+    .pill .mini{
+      width:auto;
+      padding:6px 10px;
       border-radius:12px;
       background:rgba(0,0,0,.20);
-    }
-    .profileMeta{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      min-width:0;
-      flex:1;
-    }
-    .profileMeta b{
-      font-size:11px;
-      font-weight:950;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .nextBadge{
-      font-size:9px;
-      font-weight:1000;
-      padding:3px 7px;
-      border-radius:999px;
-      border:1px solid rgba(255,45,45,.55);
-      color: rgba(255,235,235,.95);
-      background: rgba(255,45,45,.20);
-      white-space:nowrap;
-      display:none;
-      pointer-events:none;
-      user-select:none;
-    }
-    .nextBadge.show{ display:inline-flex; }
-
-    #recLamp{
-      position:absolute; top:12px; right:12px;
-      padding:7px 9px; border-radius:12px;
-      background:rgba(0,0,0,.45);
-      border:1px solid rgba(255,255,255,.20);
-      font-weight:950; font-size:11px;
-      display:none; align-items:center; gap:8px;
-      backdrop-filter: blur(6px);
-      z-index: 6;
-    }
-
-    .bottomBar{
-      position: fixed;
-      left: 0; right: 0; bottom: 0;
-      padding: 10px 12px;
-      background: rgba(0,0,0,.45);
-      border-top: 1px solid rgba(255,255,255,.15);
-      backdrop-filter: blur(10px);
-      display:flex;
-      justify-content:flex-end;
-      z-index: 50;
-    }
-
-    details{
-      border:1px solid rgba(255,255,255,.12);
-      border-radius:14px;
-      background: rgba(0,0,0,.20);
-      padding:10px;
-    }
-    summary{
+      border:1px solid rgba(255,255,255,.14);
       cursor:pointer;
-      list-style:none;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
       user-select:none;
-      font-weight:950;
-      color: var(--text);
-      font-size:11px;
-    }
-    summary::-webkit-details-marker{ display:none; }
-    .subtle{
-      font-size:11px;
-      color: var(--muted);
-      line-height:1.35;
-      margin-top:6px;
-    }
-    .codeRow{
-      display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px;
-    }
-    .codeRow input{
-      flex:1;
-      min-width: 160px;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.15);
-      background:rgba(0,0,0,.25);
-      color:var(--text);
-      outline:none;
-      font-weight:900;
+      white-space:nowrap;
       font-size:12px;
-    }
-    .codeRow input:focus{
-      border-color: rgba(255,215,0,.55);
-      box-shadow: 0 0 0 6px rgba(255,215,0,.15);
-    }
-
-    .ctrlLeft{ display:flex; gap:8px; align-items:center; }
-    .ctrlMid{ display:flex; gap:8px; align-items:center; justify-content:center; }
-    .ctrlRight{ display:flex; gap:8px; align-items:center; justify-content:flex-end; margin-left:auto; }
-
-    /* ✅ NEW: form fields */
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:8px;
-    }
-    @media (max-width: 420px){ .grid2{ grid-template-columns:1fr; } }
-    .field input, .field select{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid rgba(255,255,255,.15);
-      background:rgba(0,0,0,.25);
-      color:var(--text);
-      outline:none;
       font-weight:900;
-      font-size:12px;
     }
-    .field input:focus, .field select:focus{
-      border-color: rgba(255,215,0,.55);
-      box-shadow: 0 0 0 6px rgba(255,215,0,.15);
+    .topicOverlay{
+      pointer-events:none;
+      font-weight:900;
+      font-size:28px;
+      line-height:1.12;
+      text-shadow: 0 4px 18px rgba(0,0,0,.75);
+      max-width:90%;
     }
-
-    /* ✅ NEW: CAMPO TESTO LIBERO */
-    .free-text-section {
-      margin-top: 12px;
-      padding: 12px;
-      background: rgba(0,0,0,.20);
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.10);
-    }
-    .free-text-section textarea {
-      min-height: 80px;
-      margin-bottom: 8px;
+    .metaOverlay{
+      margin-top:8px;
+      font-size:13px;
+      font-weight:850;
+      opacity:.92;
+      text-shadow: 0 4px 14px rgba(0,0,0,.75);
+      max-width:90%;
     }
 
-    /* ===== ISTRUZIONI (MODAL) ===== */
-    .modalBackdrop{
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.70);
-      backdrop-filter: blur(10px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 999;
-      padding: 14px;
-    }
-    .modalBackdrop.show{ display:flex; }
-
-    .modalCard{
-      width: min(920px, 96vw);
-      max-height: min(82vh, 780px);
-      overflow: auto;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,.18);
-      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(0,0,0,.30));
-      box-shadow: 0 20px 80px rgba(0,0,0,.65);
-    }
-
-    .modalHead{
+    /* SIDE BUTTONS */
+    .side{
+      pointer-events:auto;
       display:flex;
+      flex-direction:column;
+      gap:10px;
+      align-items:flex-end;
+      padding-bottom:10px;
+      max-width:180px;
+    }
+    button{
+      border:0;
+      border-radius:16px;
+      padding:12px 14px;
+      background:rgba(255,255,255,.12);
+      color:#fff;
+      font-weight:900;
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(10px);
+    }
+    button.primary{
+      background:#ff2d55;
+      border-color:#ff2d55;
+    }
+    button.ghost{
+      background:rgba(0,0,0,.22);
+      border-color: rgba(255,255,255,.16);
+    }
+    button:disabled{ opacity:.5; cursor:not-allowed; }
+
+    /* RECORD UI */
+    .recBadge{
+      display:inline-flex; align-items:center; gap:8px;
+      font-weight:950;
+      letter-spacing:.5px;
+      padding:10px 12px;
+      border-radius:16px;
+      background:rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.16);
+      backdrop-filter: blur(10px);
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background:#ff2d55;
+      box-shadow: 0 0 0 7px rgba(255,45,85,.18);
+      animation:pulse 1.2s infinite;
+    }
+    @keyframes pulse{
+      0%{ transform:scale(1); opacity:1 }
+      50%{ transform:scale(1.08); opacity:.85 }
+      100%{ transform:scale(1); opacity:1 }
+    }
+
+    /* COUNTDOWN */
+    .countdown{
+      position:absolute; inset:0;
+      display:none;
+      place-items:center;
+      font-size:72px;
+      font-weight:950;
+      text-shadow: 0 10px 40px rgba(0,0,0,.75);
+      background: radial-gradient(circle at center, rgba(0,0,0,.25), rgba(0,0,0,.55));
+      pointer-events:none;
+      z-index:10;
+    }
+    .countdown.show{ display:grid; }
+
+    /* TOAST */
+    .toast{
+      position:absolute;
+      left:50%; transform:translateX(-50%);
+      bottom:92px;
+      background:rgba(0,0,0,.70);
+      border:1px solid rgba(255,255,255,.14);
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+      max-width:92%;
+      text-align:center;
+      display:none;
+      z-index:50;
+    }
+    .toast a{ color:#7ee787; font-weight:900; text-decoration:none; }
+
+    /* TOP BAR on FEED */
+    .topBar{
+      position:absolute; top:0; left:0; right:0;
+      padding:12px 16px;
+      display:flex; align-items:center; justify-content:space-between;
+      pointer-events:none;
+      z-index:5;
+    }
+    .brand{
+      pointer-events:auto;
+      font-weight:950;
+      letter-spacing:.2px;
+      padding:10px 12px;
+      border-radius:16px;
+      background:rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+      display:flex; align-items:center; gap:8px;
+    }
+    .brand small{ opacity:.75; font-weight:850; }
+    .fab{
+      pointer-events:auto;
+      border-radius:18px;
+      padding:12px 14px;
+      background:#ff2d55;
+      border:1px solid #ff2d55;
+      font-weight:950;
+      cursor:pointer;
+    }
+    .empty{
+      position:absolute; inset:0;
+      display:grid;
+      place-items:center;
+      padding:24px;
+      text-align:center;
+      color:rgba(255,255,255,.9);
+    }
+    .empty .card{
+      max-width:360px;
+      border-radius:22px;
+      background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.14);
+      padding:18px 16px;
+      backdrop-filter: blur(10px);
+    }
+    .empty h2{ margin:0 0 8px; font-size:18px; }
+    .empty p{ margin:0; opacity:.85; line-height:1.35; }
+    .kbd{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.18);
+      background:rgba(0,0,0,.22);
+      font-weight:950;
+      font-size:12px;
+      margin:0 2px;
+      white-space:nowrap;
+    }
+
+    /* Teleprompter UI panel */
+    .tpPanel{
+      position:absolute;
+      left:16px; right:16px;
+      top:72px;
+      z-index:20;
+      pointer-events:auto;
+      display:none;
+    }
+    .tpPanel.show{ display:block; }
+
+    .tpGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+    }
+    .tpControls{
+      display:flex; gap:10px; flex-wrap:wrap;
+    }
+    .tpControls button{
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+      font-weight:950;
+    }
+    .tpControls .pill{
+      padding:10px 12px;
+      border-radius:16px;
+      display:flex;
+      gap:10px;
       align-items:center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px;
-      border-bottom: 1px solid rgba(255,255,255,.12);
+      width:100%;
     }
-    .modalHead h3{
-      margin:0;
-      font-size: 12px;
-      letter-spacing: .7px;
-      text-transform: uppercase;
-      color: var(--muted);
-      font-weight: 1000;
+    .tpControls input[type="range"]{ width:100%; }
+    .tpLabel{ font-size:12px; opacity:.85; font-weight:900; }
+
+    /* Teleprompter overlay (what user reads) */
+    .tpOverlay{
+      position:absolute;
+      left:0; right:0;
+      z-index:8;
+      pointer-events:none;
+      display:none;
     }
-    .modalBody{
-      padding: 12px;
-      font-size: 12px;
-      line-height: 1.35;
-      color: var(--text);
+    .tpOverlay.show{ display:block; }
+    .tpBox{
+      margin:0 auto;
+      width:min(92%, 440px);
+      border-radius:20px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.35);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+      padding:14px 14px 10px;
     }
-    .modalBody .k{
-      color: var(--gold);
-      font-weight: 1000;
+    .tpViewport{
+      height:140px; /* will be adjusted */
+      overflow:hidden;
+      position:relative;
     }
-    .modalBody ul{ margin: 8px 0 12px 18px; }
-    .modalBody li{ margin: 6px 0; }
-    .hr{
-      height:1px;
-      background: rgba(255,255,255,.12);
-      margin: 12px 0;
-    }
-    
-    /* ✅ NEW: WHATSAPP INVIA BUTTON */
-    .btn.whatsapp {
-      background: linear-gradient(135deg, #25D366, #128C7E);
-      color: white;
-      border-color: rgba(37, 211, 102, 0.6);
-      font-weight: 1000;
-    }
-    .btn.whatsapp:hover {
-      background: linear-gradient(135deg, #25D366, #1da851);
-      border-color: rgba(37, 211, 102, 0.8);
+    .tpText{
+      position:absolute;
+      left:0; right:0;
+      top:0;
+      font-weight:900;
+      line-height:1.2;
+      text-shadow: 0 4px 18px rgba(0,0,0,.75);
+      white-space:pre-wrap;
+      word-break:break-word;
     }
   </style>
-
-<style>
-/* ADDITION: move Teleprompter + REC controls to the left */
-#recordControls,
-.controls,
-.teleprompter-controls {
-  justify-content: flex-start !important;
-  text-align: left !important;
-}
-</style>
-
-
-<style>
-/* ADDITION: layout controls exactly as requested */
-.teleprompter-controls,
-#recordControls,
-.controls {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  gap: 12px !important;
-}
-
-.teleprompter-controls > *:nth-child(1) {
-  margin-right: auto !important;
-}
-</style>
-
-
-<style>
-/* ADDITION: Zoom layout as requested */
-.zoom-controls,
-#zoomControls {
-  display: flex !important;
-  align-items: center !important;
-  gap: 14px !important;
-}
-
-.zoom-controls input[type="range"],
-#zoomControls input[type="range"] {
-  flex: 1 1 auto !important;
-  min-width: 240px !important;
-}
-
-.zoom-value,
-#zoomValue {
-  min-width: 52px !important;
-  text-align: center !important;
-  font-weight: 600 !important;
-}
-</style>
-
-
-<style>
-/* ADDITION: force control bar layout exactly like reference */
-.teleprompter-controls,
-#recordControls,
-.controls {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  gap: 14px !important;
-}
-
-.teleprompter-controls > * {
-  flex: 0 0 auto !important;
-}
-
-.teleprompter-controls > *:first-child {
-  margin-right: auto !important;
-}
-</style>
-
-
-<style>
-/* ADDITION: lock control bar position on mobile */
-@media (max-width: 768px) {
-  .teleprompter-controls,
-  #recordControls,
-  .controls {
-    position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: env(safe-area-inset-bottom, 0) !important;
-    padding: 12px 10px !important;
-    z-index: 9999 !important;
-  }
-}
-</style>
-
-
-<style>
-/* ADDITION: force layout from stacked (photo 1) to single-row (photo 2), including mobile */
-.teleprompter-controls,
-#recordControls,
-.controls {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  flex-wrap: nowrap !important;
-  gap: 14px !important;
-}
-
-/* Keep buttons on one line on small screens; allow horizontal scroll if ultra-narrow */
-@media (max-width: 420px) {
-  .teleprompter-controls,
-  #recordControls,
-  .controls {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  .teleprompter-controls::-webkit-scrollbar,
-  #recordControls::-webkit-scrollbar,
-  .controls::-webkit-scrollbar {
-    height: 0 !important;
-  }
-}
-</style>
-
-
-<style>
-/* ADDITION: enforce controls layout (Camera | Stop | Riavvia tele | Teleprompter+REC) like reference */
-.controlsRow .bar.between {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  flex-wrap: nowrap !important;
-  width: 100% !important;
-}
-
-.controlsRow .ctrlLeft,
-.controlsRow .ctrlMid,
-.controlsRow .ctrlRight {
-  display: flex !important;
-  align-items: center !important;
-  flex-wrap: nowrap !important;
-}
-
-.controlsRow .ctrlMid {
-  gap: 12px !important;
-}
-
-.controlsRow .ctrlRight {
-  justify-content: flex-end !important;
-}
-
-/* Mobile: keep same single-row layout; allow horizontal scroll only if ultra narrow */
-@media (max-width: 768px) {
-  .controlsRow .bar.between {
-    flex-direction: row !important;
-  }
-}
-@media (max-width: 420px) {
-  .controlsRow .bar.between {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-  .controlsRow .bar.between::-webkit-scrollbar { height: 0 !important; }
-}
-</style>
-
 </head>
-
 <body>
-<div class="wrap">
+  <div class="app">
 
-  <header>
-    <div class="row" style="flex:1;">
-      <button class="btn question-btn" id="btnNext" type="button">
-        <span class="ico">✨</span> Nuova domanda
-      </button>
+    <!-- FEED -->
+    <div class="feed" id="feed" aria-label="Feed verticale">
+      <div class="topBar">
+        <div class="brand">🎬 WebTok <small>PRO</small></div>
+        <button class="fab" id="btnOpenRec">+ Registra</button>
+      </div>
 
-      <button class="btn blue" id="btnOpenChatGPTPasteQ" type="button" title="Copia PROMPT + domanda e apre ChatGPT">
-        <span class="ico">💬</span> Apri ChatGPT + copia domanda
-      </button>
-
-      <button class="btn violet" id="btnPasteTop" type="button" title="Incolla dagli appunti nel blocco risposta qui sotto">
-        <span class="ico">📋</span> Incolla risposta
-      </button>
-
-      <!-- ✅ ISTRUZIONI BUTTON -->
-      <button class="btn gray" id="btnInstructions" type="button" title="Apri le istruzioni operative">
-        <span class="ico">📖</span> Istruzioni
-      </button>
-
-      <!-- ✅ WHATSAPP INVIA BUTTON -->
-      <button class="btn whatsapp" id="btnSendWhatsApp" type="button" title="Invia caption completa su WhatsApp">
-        <span class="ico">📱</span> Invia su WhatsApp
-      </button>
-
-      <span class="pill">
-        <span id="videoCounter">Video: 0</span>
-        <span>•</span>
-        <span id="activeProfileLabel">Prossimo: —</span>
-      </span>
+      <div class="empty" id="emptyState">
+        <div class="card">
+          <h2>Nessun clip ancora</h2>
+          <p>
+            Premi <span class="kbd">+ Registra</span>, scrivi una riga tipo:
+            <span class="kbd">TRILOCALE · 82 MQ · NAVIGLI · € 395.000</span>
+            e registra.
+          </p>
+        </div>
+      </div>
+      <!-- pages injected -->
     </div>
 
-    <div class="row">
-      <button class="btn tiny gray" id="btnBackTop" type="button">← Gestionale</button>
-    </div>
-  </header>
+    <!-- RECORDER SCREEN -->
+    <div class="recScreen" id="recScreen">
+      <div class="recStage">
+        <video id="livePreview" playsinline muted autoplay></video>
+        <canvas id="recCanvas"></canvas>
+      </div>
 
-  <div class="hintTop">
-    <b>FLUSSO RAPIDO:</b> 1) <b>Nuova domanda</b> → 2) <b>Apri ChatGPT</b> (copia automatica) → 3) ChatGPT genera → 4) <b>Incolla risposta</b> → 
-    5) <b/b> → 6) <b>Teleprompter + REC</b> → 7) <b>Invia su WhatsApp</b> (caption completa)
-  </div>
-
-  <!-- ✅ DATI IMMOBILE -->
-  <div class="card">
-    <div class="section">
-      <p class="h">Dati immobile (inseriti dal cliente)</p>
-
-      <div class="grid2">
-        <div class="field">
-          <input id="f_displayName" placeholder="Nome visualizzato (es: Trilocale Luminoso)" />
-        </div>
-        <div class="field">
-          <input id="f_price" placeholder="Prezzo immobile (es: 320.000€)" />
-        </div>
-        <div class="field">
-          <input id="f_mq" type="number" min="0" step="1" placeholder="Metri Quadri (mq)" />
-        </div>
-
-        <div class="field">
-          <input id="f_piano" placeholder="Piano (es: 2° / rialzato / terra)" />
-        </div>
-        <div class="field">
-          <input id="f_locali" placeholder="Locali (es: 3 / bilocale / trilocale)" />
-        </div>
-
-        <div class="field">
-          <input id="f_bagno" placeholder="Bagno/i (es: 1 / 2 / 1 finestrato)" />
-        </div>
-        <div class="field">
-          <input id="f_riscaldamento" placeholder="Riscaldamento (es: autonomo / centralizzato)" />
-        </div>
-
-        <div class="field">
-          <select id="f_giardino">
-            <option value="">Giardino (seleziona)</option>
-            <option value="Sì">Sì</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-        <div class="field">
-          <select id="f_garage">
-            <option value="">Garage/box (seleziona)</option>
-            <option value="Sì">Sì</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <select id="f_arredamento">
-            <option value="">Arredamento (seleziona)</option>
-            <option value="Arredato">Arredato</option>
-            <option value="Parzialmente arredato">Parzialmente arredato</option>
-            <option value="Non arredato">Non arredato</option>
-          </select>
-        </div>
-        <div class="field">
-          <select id="f_ascensore">
-            <option value="">Ascensore (seleziona)</option>
-            <option value="Sì">Sì</option>
-            <option value="No">No</option>
-          </select>
-        </div>
-
-        <div class="field">
-          <select id="f_libero">
-            <option value="">Libero (seleziona)</option>
-            <option value="Subito">Subito</option>
-            <option value="Da concordare">Da concordare</option>
-            <option value="Occupato">Occupato</option>
-          </select>
-        </div>
-        <div class="field">
-          <input id="f_classeImmobile" placeholder="Classe Immobile (es: A4 / B / C ...)" />
-        </div>
-
-        <div class="field">
-          <input id="f_anno" type="number" min="0" step="1" placeholder="Anno di Costruzione (es: 1998)" />
-        </div>
-        <div class="field">
-          <select id="f_ristrutturato">
-            <option value="">Ristrutturato (seleziona)</option>
-            <option value="Sì">Sì</option>
-            <option value="No">No</option>
-            <option value="Parzialmente">Parzialmente</option>
-          </select>
+      <!-- Teleprompter overlay (visual) -->
+      <div class="tpOverlay" id="tpOverlay">
+        <div class="tpBox" id="tpBox">
+          <div class="tpViewport" id="tpViewport">
+            <div class="tpText" id="tpText"></div>
+          </div>
         </div>
       </div>
 
-      <div class="bar left" style="margin-top:10px;">
-        <button class="btn tiny gray" id="btnClearProperty" type="button">🧹 Svuota dati</button>
-        <span class="pill" id="propertyStatus">Dati: —</span>
-      </div>
+      <!-- Teleprompter panel (controls) -->
+      <div class="tpPanel" id="tpPanel">
+        <div class="tpGrid">
+          <div class="pill">
+            <span style="font-size:14px;">📝</span>
+            <textarea id="tpScript" rows="3" placeholder="Script teleprompter… (va a capo quando vuoi)"></textarea>
+            <span class="mini" id="tpClear">Pulisci</span>
+          </div>
 
-      <div class="subtle">
-        Questi dati vengono aggiunti automaticamente al testo che copi su ChatGPT.
-      </div>
-    </div>
-  </div>
-
-  <!-- ✅ TESTO LIBERO (NUOVO CAMPO) -->
-  <div class="card free-text-section">
-    <p class="h">Testo libero (opzionale - aggiunge contenuto extra)</p>
-    <div class="field">
-      <textarea id="freeText" placeholder="Scrivi qui eventuali note aggiuntive, caratteristiche particolari o punti di forza extra dell'immobile..."></textarea>
-    </div>
-    <div class="subtle">
-      Questo testo verrà aggiunto in fondo al prompt per ChatGPT (non obbligatorio).
-    </div>
-  </div>
-
-  <!-- BLOCCO RISPOSTA IN ALTO -->
-  <div class="card">
-    <div class="section">
-      <p class="h">Risposta (da ChatGPT o scritta da te)</p>
-      <div class="field">
-        <textarea id="answerBox" placeholder="Qui verrà incollata la risposta quando premi 'Incolla risposta'... Oppure scrivi direttamente il testo per il teleprompter"></textarea>
-      </div>
-
-      <div class="bar left" style="margin-top:10px;">
-        <button class="btn primary" id="btnSendTele" type="button"><span class="ico">➡️</span> </button>
-        <button class="btn gray" id="btnCopyCaption" type="button" title="Copia caption con hashtag (se non già presenti)">
-          <span class="ico">📋</span> Copia caption
-        </button>
-      </div>
-
-      <div class="subtle">
-        <b>Modalità rapida:</b> Puoi anche scrivere direttamente qui il testo che vuoi visualizzare nel teleprompter, senza passare da ChatGPT.
-      </div>
-    </div>
-  </div>
-
-  <div class="layout">
-    <!-- MAIN -->
-    <div class="card">
-      <div class="section">
-        <p class="h">Video 9:16 + teleprompter</p>
-
-        <div class="stageRow">
-          <div class="stageBlock">
-            <div id="stage916">
-              <video id="cam" autoplay playsinline muted></video>
-
-              <div id="recLamp">
-                <span style="width:10px;height:10px;border-radius:999px;background:#ff2d2d;display:inline-block;"></span>
-                <span id="recTime">REC 00:00</span>
-              </div>
-
-              <div id="overlay">
-                <div id="questionBoxOverlay">Premi "Nuova domanda".</div>
-                <div id="teleprompterOverlay">
-                  <div id="teleText">Incolla/scrivi una risposta in alto → "" → "Teleprompter + REC".</div>
-                </div>
-              </div>
+          <div class="pill" style="flex-direction:column; align-items:stretch; gap:10px;">
+            <div class="tpControls">
+              <button class="ghost" id="tpPlay">▶︎ Play</button>
+              <button class="ghost" id="tpPause">⏸︎ Pausa</button>
+              <button class="ghost" id="tpReset">↺ Reset</button>
+              <button class="ghost" id="tpMirror">Mirror: OFF</button>
+              <button class="ghost" id="tpPos">Pos: BASSO</button>
+              <button class="ghost" id="tpBurn">Burn-in: ON</button>
             </div>
 
-            <div class="controlsRow">
-              <div class="bar between" style="width:100%;">
-                <div class="ctrlLeft">
-                  <button class="btn gray" id="btnCam" type="button"><span class="ico">📷</span> Camera</button>
-                </div>
-
-                <div class="ctrlMid">
-                  <button class="btn gray" id="btnStop" type="button"><span class="ico">⏹</span> Stop</button>
-                  <button class="btn gray" id="btnRestart" type="button"><span class="ico">↻</span> Riavvia</button>
-                </div>
-
-                <div class="ctrlRight">
-                  <button class="btn rec" id="btnTeleRec" type="button" title="Avvia teleprompter e registrazione">
-                    <span class="dot"></span> Teleprompter + REC
-                  </button>
-                </div>
+            <div style="display:grid; gap:10px;">
+              <div>
+                <div class="tpLabel">Velocità (px/s)</div>
+                <input id="tpSpeed" type="range" min="10" max="220" value="70">
               </div>
-
-              <div class="bar">
-                <label class="chk"><input class="check" type="checkbox" id="speed120"> 120</label>
-                <label class="chk"><input class="check" type="checkbox" id="speed105"> 105</label>
-                <label class="chk"><input class="check" type="checkbox" id="speed90"> 90</label>
-                <span class="pill" id="speedLabel">Vel: 105s</span>
+              <div>
+                <div class="tpLabel">Dimensione testo</div>
+                <input id="tpFont" type="range" min="18" max="60" value="34">
               </div>
-
-              <div class="sliderRow">
-                <span>Zoom</span>
-                <input id="zoom" type="range" min="1" max="2.5" step="0.1" value="1" />
-                <span id="zoomVal">1.0x</span>
+              <div>
+                <div class="tpLabel">Opacità box</div>
+                <input id="tpBoxOpacity" type="range" min="0" max="80" value="35">
+              </div>
+              <div>
+                <div class="tpLabel">Altezza teleprompter</div>
+                <input id="tpHeight" type="range" min="90" max="260" value="140">
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-          <div>
-            <p class="h">Rotazione profili (piccola)</p>
-            <div class="profiles">
-              <div class="profileRow">
-                <input class="check" type="checkbox" id="rot_tiktok" checked>
-                <div class="profileMeta"><b>📱 TikTok</b></div>
-                <span class="nextBadge" id="badge_tiktok">PROSSIMO</span>
-              </div>
-              <div class="profileRow">
-                <input class="check" type="checkbox" id="rot_instagram" checked>
-                <div class="profileMeta"><b>📸 Instagram</b></div>
-                <span class="nextBadge" id="badge_instagram">PROSSIMO</span>
-              </div>
-              <div class="profileRow">
-                <input class="check" type="checkbox" id="rot_shorts">
-                <div class="profileMeta"><b>🎥 Shorts</b></div>
-                <span class="nextBadge" id="badge_shorts">PROSSIMO</span>
-              </div>
-              <div class="profileRow">
-                <input class="check" type="checkbox" id="rot_facebook">
-                <div class="profileMeta"><b>💼 Facebook</b></div>
-                <span class="nextBadge" id="badge_facebook">PROSSIMO</span>
-              </div>
+      <div class="countdown" id="countdown">3</div>
+
+      <div class="hud">
+        <div class="row">
+          <div class="pill" style="max-width:100%;">
+            <span style="font-size:14px;">🎯</span>
+            <input id="topicInput" placeholder="Ticker (es: TRILOCALE · 82 MQ · NAVIGLI · € 395.000) + hashtag" maxlength="140" />
+            <span class="mini" id="btnClearTopic">Pulisci</span>
+          </div>
+        </div>
+
+        <div class="row" style="align-items:flex-end;">
+          <div style="display:flex; flex-direction:column; gap:8px; max-width:90%;">
+            <div class="topicOverlay" id="topicOverlay"></div>
+            <div class="metaOverlay" id="hashOverlay"></div>
+          </div>
+
+          <div class="side">
+            <button class="ghost" id="btnBack">← Feed</button>
+            <button id="btnStartCam">Attiva camera</button>
+            <button id="btnFlip" disabled>Flip</button>
+
+            <button class="ghost" id="btnMirrorPreview">Mirror preview: OFF</button>
+
+            <button class="ghost" id="btnTeleprompter">Teleprompter: OFF</button>
+            <button class="ghost" id="btnCountdownToggle">Countdown: ON</button>
+
+            <button class="ghost" id="btnMax15">Max 15s</button>
+            <button class="ghost" id="btnMax30">Max 30s</button>
+            <button class="ghost" id="btnMax60">Max 60s</button>
+
+            <div class="recBadge" id="recBadge" style="display:none;">
+              <span class="dot"></span>
+              <span id="recTime">00:00</span>
             </div>
 
-            <div class="subtle">
-              Seleziona i canali da includere. "PROSSIMO" è solo un indicatore (non cliccabile).
-            </div>
+            <button class="primary" id="btnRecord" disabled>Registra</button>
+            <button id="btnStop" disabled>Stop</button>
+
+            <button id="btnSaveToFeed" disabled>Salva nel feed</button>
+            <button id="btnDownload" disabled>Download</button>
           </div>
         </div>
-
-        <canvas id="recCanvas" width="1080" height="1920" style="display:none;"></canvas>
       </div>
+
+      <div class="toast" id="toast"></div>
     </div>
 
-    <!-- SIDE -->
-    <div class="card">
-      <div class="section">
-        <div class="bar between">
-          <p class="h" style="margin:0;">Caption (memorizzata)</p>
-          <label class="chk" title="Memorizza la caption (senza hashtag) per il prossimo avvio">
-            <input type="checkbox" id="chkRememberCaption" class="check" checked />
-            Memorizza
-          </label>
-        </div>
-
-        <div class="mini" id="captionPreview" style="margin-top:10px;">—</div>
-        <div class="subtle">Gli hashtag automatici vengono aggiunti solo in copia (se non già presenti).</div>
-      </div>
-
-      <div class="section">
-        <p class="h">Video creati</p>
-        <div class="subtle">Seleziona un elemento (qui sotto) per rivederlo.</div>
-
-        <video id="playback" controls style="width:100%; border-radius:14px; background:#000; margin-top:10px;"></video>
-
-        <div class="bar left" style="margin-top:10px;">
-          <button class="btn" id="btnDownloadVideo" type="button"><span class="ico">📥</span> Scarica video</button>
-          <button class="btn tiny gray" id="btnClearList" type="button">🗑️ Svuota</button>
-        </div>
-
-        <!-- UPLOAD VIDEO -->
-        <div class="bar left" style="margin-top:10px;">
-          <input id="uploadVideo" type="file" accept="video/*" style="display:none;" />
-          <button class="btn" id="btnUploadVideo" type="button" title="Carica un video già pronto (uso futuro)">
-            <span class="ico">⬆️</span> Carica video
-          </button>
-          <span class="pill">Upload in lista</span>
-        </div>
-
-        <div class="mini" id="recList" style="margin-top:10px; max-height:260px; overflow:auto;">—</div>
-      </div>
-
-      <div class="section">
-        <details id="promptDetails">
-          <summary>
-            <span>🧠 Prompt ChatGPT (clicca per aprire)</span>
-            <span class="pill" id="promptStatePill">Bloccato</span>
-          </summary>
-
-          <div class="subtle">
-            Questo prompt viene sempre inserito <b>prima</b> della domanda quando premi "Apri ChatGPT + copia domanda".
-          </div>
-
-          <div class="field" style="margin-top:10px;">
-            <textarea id="promptBox" readonly></textarea>
-          </div>
-
-          <div class="codeRow">
-            <input id="unlockCode" placeholder="Codice per modificare il prompt" />
-            <button class="btn tiny primary" id="btnUnlock" type="button">Sblocca</button>
-            <button class="btn tiny" id="btnSavePrompt" type="button" disabled>Salva</button>
-            <button class="btn tiny" id="btnResetPrompt" type="button" disabled>Ripristina</button>
-          </div>
-
-          <div class="subtle">Per modificare serve il codice: <b>16091979Jm</b>.</div>
-        </details>
-      </div>
-    </div>
   </div>
-</div>
-
-<!-- ✅ MODAL ISTRUZIONI -->
-<div class="modalBackdrop" id="instructionsModal" aria-hidden="true">
-  <div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="instructionsTitle">
-    <div class="modalHead">
-      <h3 id="instructionsTitle">Istruzioni operative • Video Creator</h3>
-      <button class="btn tiny gray" id="btnCloseInstructions" type="button">✖ Chiudi</button>
-    </div>
-
-    <div class="modalBody">
-      <div class="pill" style="display:inline-flex; margin-bottom:10px;">
-        Obiettivo: <b style="color:var(--text);">domanda → testo → teleprompter → video pronto</b>
-      </div>
-
-      <p style="margin:0 0 8px;">
-        Questa dashboard serve a creare video verticali <span class="k">9:16</span> (TikTok/Instagram/Reels/Shorts) usando
-        i <span class="k">dati immobile</span> + un testo generato con <span class="k">ChatGPT</span> + un <span class="k">teleprompter</span> integrato.
-      </p>
-
-      <div class="hr"></div>
-
-      <p class="h" style="margin:0 0 8px;">Flusso in 7 passi</p>
-      <ol style="margin: 0 0 12px 18px;">
-        <li><b>Compila "Dati immobile"</b> (più dati = testo migliore).</li>
-        <li><b>Usa "Testo libero"</b> per aggiungere dettagli extra (opzionale).</li>
-        <li><b>Premi "Nuova domanda"</b> finché trovi la domanda giusta.</li>
-        <li><b>Premi "Apri ChatGPT + copia domanda"</b> → incolla su ChatGPT → invia → copia la risposta.</li>
-        <li><b>Premi "Incolla risposta"</b> e poi <b>""</b>.</li>
-        <li><b>Premi "Teleprompter + REC"</b> per registrare con teleprompter e timer REC.</li>
-        <li><b>Premi "Invia su WhatsApp"</b> per inviare la caption completa con hashtag.</li>
-      </ol>
-
-      <div class="hr"></div>
-
-      <p class="h" style="margin:0 0 8px;">Funzioni chiave</p>
-      <ul>
-        <li><b>Camera</b>: accende la camera/microfono.</li>
-        <li><b>Velocità (90/105/120)</b>: regola lo scorrimento del teleprompter.</li>
-        <li><b>Zoom</b>: ingrandisce l'inquadratura.</li>
-        <li><b>Testo libero</b>: aggiunge contenuto extra al prompt ChatGPT.</li>
-        <li><b>Invia su WhatsApp</b>: manda la caption completa con hashtag al numero +393713708294.</li>
-      </ul>
-
-      <div class="hr"></div>
-
-      <p class="h" style="margin:0 0 8px;">Modalità rapida</p>
-      <p style="margin:0;">
-        Puoi <b>scrivere direttamente</b> nel campo "Risposta" e usare "" senza passare da ChatGPT.
-        Ideale per testi brevi o quando hai già il contenuto pronto.
-      </p>
-    </div>
-  </div>
-</div>
-
-<div class="bottomBar">
-  <button class="btn tiny gray" id="btnBackBottom" type="button">← Gestionale</button>
-</div>
 
 <script>
-/* ==========================
-   CONFIG
-========================== */
-const GESTIONALE_URL = "https://tuo-gestionale.com";
-const CHATGPT_URL = "https://chatgpt.com/c/69528e47-0920-8331-8d43-59824e8a9c54";
-const WHATSAPP_NUMBER = "+393713708294";
+(() => {
+  // ---------------- DOM ----------------
+  const feed = document.getElementById('feed');
+  const emptyState = document.getElementById('emptyState');
+  const btnOpenRec = document.getElementById('btnOpenRec');
 
-/* Hashtag automatici */
-const HIDDEN_HASHTAGS = [
-  "#immobiliarelasacra","#josephcretorlab","#realmediapro","#amamy","#immobiliare","#realestateitalia",
-  "#mercatoimmobiliare","#agenziaimmobiliare","#casainvendita","#venditacasa","#investimentiimmobiliari",
-  "#property","#realestate","#digitalstrategist","#digitalstrategy","#marketingdigitale","#strategiamarketing",
-  "#brandstrategy","#contentstrategy","#socialmediastrategy","#growthmarketing","#personalbranding","#branding",
-  "#businessdigitale","#marketingonline"
-].join(" ");
+  const recScreen = document.getElementById('recScreen');
+  const livePreview = document.getElementById('livePreview');
+  const canvas = document.getElementById('recCanvas');
+  const ctx = canvas.getContext('2d');
 
-/* Prompt base */
-const BASE_PROMPT = `🧩 PROMPT ADATTIVO – PROMO IMMOBILE (MAX 250 PAROLE + HASHTAG)
+  const countdownEl = document.getElementById('countdown');
+  const toast = document.getElementById('toast');
 
-Agisci come un consulente immobiliare esperto e un copywriter per video social (TikTok/Instagram/Reels).
-Devi creare testi brevi, chiari e super scorrevoli, adatti anche a un ragazzo di 15 anni.
+  const topicInput = document.getElementById('topicInput');
+  const topicOverlay = document.getElementById('topicOverlay');
+  const hashOverlay = document.getElementById('hashOverlay');
+  const btnClearTopic = document.getElementById('btnClearTopic');
 
-Obiettivo: promuovere l'immobile usando i dati forniti (mq, piano, locali, ecc.) e trasformarli in una narrazione "vendibile".
-Evita tecnicismi: se usi un termine tecnico, spiegalo subito in modo semplice.
+  const btnBack = document.getElementById('btnBack');
+  const btnStartCam = document.getElementById('btnStartCam');
+  const btnFlip = document.getElementById('btnFlip');
+  const btnMirrorPreview = document.getElementById('btnMirrorPreview');
 
-Struttura di ogni risposta:
-1) Hook iniziale (1-2 frasi che catturano l'attenzione)
-2) Presentazione immobile (benefici concreti, non solo caratteristiche)
-3) 2-3 punti forti in elenco (rapidi)
-4) Chiusura con invito all'azione (scrivi "Scrivimi in DM" o "Chiamami")
-5) Hashtag: 5 pertinenti + quelli fissi
+  const btnTeleprompter = document.getElementById('btnTeleprompter');
+  const tpPanel = document.getElementById('tpPanel');
+  const tpOverlay = document.getElementById('tpOverlay');
+  const tpBox = document.getElementById('tpBox');
+  const tpViewport = document.getElementById('tpViewport');
+  const tpText = document.getElementById('tpText');
 
-Regole fondamentali:
-- Massimo 250 parole, non di più
-- Tone: amichevole, rassicurante, professionale
-- Niente linguaggio tecnico inutile`;
+  const tpScript = document.getElementById('tpScript');
+  const tpClear = document.getElementById('tpClear');
+  const tpPlay = document.getElementById('tpPlay');
+  const tpPause = document.getElementById('tpPause');
+  const tpReset = document.getElementById('tpReset');
+  const tpMirror = document.getElementById('tpMirror');
+  const tpPos = document.getElementById('tpPos');
+  const tpBurn = document.getElementById('tpBurn');
+  const tpSpeed = document.getElementById('tpSpeed');
+  const tpFont = document.getElementById('tpFont');
+  const tpBoxOpacity = document.getElementById('tpBoxOpacity');
+  const tpHeight = document.getElementById('tpHeight');
 
-/* Codice sblocco prompt */
-const UNLOCK_CODE = "16091979Jm";
+  const btnCountdownToggle = document.getElementById('btnCountdownToggle');
 
-/* Question Bank */
-const QUESTION_BANK = [
-  { q:"Scrivimi un testo per un video di 20-30 secondi che presenti questo immobile in modo super attraente." },
-  { q:"Crea una caption Instagram persuasiva per questo immobile, con call-to-action forte." },
-  { q:"Fammi una versione più emozionale e una più 'dati e concretezza' per lo stesso immobile." },
-  { q:"Scrivi un testo stile 'tour rapido' (come se stessi mostrando le stanze) per questo immobile." },
-  { q:"Scrivi una versione pensata per chi cerca prima casa (tono rassicurante)." },
-  { q:"Scrivi una versione pensata per investitori (tono pratico, focalizzato sul valore)." },
-];
+  const btnMax15 = document.getElementById('btnMax15');
+  const btnMax30 = document.getElementById('btnMax30');
+  const btnMax60 = document.getElementById('btnMax60');
 
-/* Teleprompter speed */
-const TELE_SPEEDS = { s120:120, s105:105, s90:90 };
-let teleprompterSeconds = TELE_SPEEDS.s105;
+  const recBadge = document.getElementById('recBadge');
+  const recTimeEl = document.getElementById('recTime');
 
-/* State */
-let qIdx = -1;
-let currentQuestion = "";
-let lastCaptionClean = "";
-let totalVideos = 0;
+  const btnRecord = document.getElementById('btnRecord');
+  const btnStop = document.getElementById('btnStop');
+  const btnSaveToFeed = document.getElementById('btnSaveToFeed');
+  const btnDownload = document.getElementById('btnDownload');
 
-/* Rotazione profili */
-let rotationIndex = 0;
+  // ---------------- STATE ----------------
+  let stream = null;
+  let facingMode = 'user';
+  let recorder = null;
+  let chunks = [];
+  let recordedBlob = null;
 
-/* Prompt state */
-let promptText = "";
+  let rafId = null;
+  let isCountdownOn = true;
 
-/* ==========================
-   HELPERS
-========================== */
-const $ = (id) => document.getElementById(id);
+  let maxSeconds = 30;
+  let recStartTs = 0;
+  let recTimerId = null;
 
-function pad2(n){ return String(n).padStart(2,"0"); }
-function nowStamp(){
-  const d = new Date();
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}-${pad2(d.getHours())}-${pad2(d.getMinutes())}-${pad2(d.getSeconds())}`;
-}
-function slugify(it){
-  return String(it || "")
-    .toLowerCase()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
-    .replace(/[^a-z0-9\s-]/g,"")
-    .trim()
-    .replace(/\s+/g,"-")
-    .replace(/-+/g,"-")
-    .slice(0, 50);
-}
-function keywordsFromQuestion(q){
-  const stop = new Set(["perche","perché","che","cosa","come","se","e","o","il","lo","la","i","gli","le","un","una","da","di","del","della","delle","dei","dello","in","su","a","al","alla","alle","agli","ai","con","senza","poi","subito","solo","nessuna","nessun","meglio","ha","senso","dopo","non","piu","più","anche"]);
-  const words = slugify(q).split("-").filter(w => w && !stop.has(w));
-  return words.slice(0, 4).join("-");
-}
+  let mirrorPreview = false;
 
-async function copyText(text){
-  const t = String(text || "");
-  if(!t.trim()) return false;
-  try{
-    await navigator.clipboard.writeText(t);
-    return true;
-  }catch(e){
-    const ta = document.createElement("textarea");
-    ta.value = t;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
-    return true;
+  // Feed clips (persisted in IndexedDB)
+  let clips = []; // { id, createdAt, topic, hashtags, blob, mime, thumbBlob }
+  const urlCache = new Map(); // id -> objectURL
+  const thumbUrlCache = new Map();
+
+  // Teleprompter
+  let tpEnabled = false;
+  let tpPlaying = false;
+  let tpMirrorOn = false;
+  let tpPosition = 'bottom'; // 'bottom' | 'top'
+  let tpBurnIn = true;
+
+  let tpScrollY = 0; // px
+  let tpLastTs = 0;
+
+  // ✅ Ticker (sottotitolo scorrevole)
+  let tickerX = 0;
+  const tickerSpeed = 90; // px/sec
+  let lastFrameTs = 0;
+
+  // ---------------- HELPERS ----------------
+  const pad2 = (n) => String(n).padStart(2,'0');
+  const fmtTime = (sec) => `${pad2(Math.floor(sec/60))}:${pad2(sec%60)}`;
+  const nowIso = () => new Date().toISOString();
+
+  function showToast(html, ms=3500){
+    toast.innerHTML = html;
+    toast.style.display = 'block';
+    if (ms) setTimeout(() => toast.style.display = 'none', ms);
   }
-}
-async function readClipboardText(){
-  return await navigator.clipboard.readText();
-}
 
-function captionWithHashtagsIfNeeded(clean){
-  const c = String(clean || "").trim();
-  if(!c) return "";
-
-  const lower = c.toLowerCase();
-  if (lower.includes("#immobiliarelasacra") || lower.includes("#josephcretorlab") || lower.includes("#realmediapro")){
-    return c;
+  function parseHashtags(text){
+    const tags = (text.match(/#[\p{L}\p{N}_]+/gu) || [])
+      .map(t => t.toLowerCase());
+    return [...new Set(tags)];
   }
-  return `${c}\n\n${HIDDEN_HASHTAGS}`.trim();
-}
 
-function setCaptionClean(clean){
-  lastCaptionClean = String(clean || "").trim();
-  $("captionPreview").textContent = lastCaptionClean || "—";
-  if ($("chkRememberCaption").checked){
-    try{ localStorage.setItem("vc_caption_clean", lastCaptionClean); }catch(e){}
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'","&#39;");
   }
-}
 
-/* ==========================
-   DATI IMMOBILE
-========================== */
-const PROPERTY_FIELDS = [
-  ["f_displayName","Nome visualizzato"],
-  ["f_mq","Metri Quadri"],
-  ["f_piano","Piano"],
-  ["f_locali","Locali"],
-  ["f_bagno","Bagno"],
-  ["f_riscaldamento","Riscaldamento"],
-  ["f_giardino","Giardino"],
-  ["f_garage","Garage/box"],
-  ["f_arredamento","Arredamento"],
-  ["f_ascensore","Ascensore"],
-  ["f_libero","Libero"],
-  ["f_classeImmobile","Classe Immobile"],
-  ["f_anno","Anno di Costruzione"],
-  ["f_ristrutturato","Ristrutturato"],
-];
-
-// Campo aggiuntivo (prezzo immobile)
-PROPERTY_FIELDS.splice(1, 0, ["f_price","Prezzo immobile"]);
-
-
-function getPropertyData(){
-  const data = {};
-  for(const [id,label] of PROPERTY_FIELDS){
-    const el = $(id);
-    if(!el) continue;
-    const v = String(el.value || "").trim();
-    if(v) data[label] = v;
+  function bestMimeType() {
+    const candidates = [
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm'
+    ];
+    return candidates.find(t => MediaRecorder.isTypeSupported(t)) || '';
   }
-  return data;
-}
 
-function propertyDataToText(data){
-  const entries = Object.entries(data || {});
-  if(!entries.length) return "—";
-  return entries.map(([k,v]) => `- ${k}: ${v}`).join("\n");
-}
-
-function updatePropertyStatus(){
-  const data = getPropertyData();
-  const count = Object.keys(data).length;
-  $("propertyStatus").textContent = count ? `Dati: ${count} compilati` : "Dati: —";
-}
-
-function savePropertyToLS(){
-  try{
-    localStorage.setItem("vc_property_data", JSON.stringify(getPropertyData()));
-  }catch(e){}
-}
-
-function loadPropertyFromLS(){
-  try{
-    const raw = localStorage.getItem("vc_property_data");
-    if(!raw) return;
-    const obj = JSON.parse(raw);
-    for(const [id,label] of PROPERTY_FIELDS){
-      if(obj && obj[label] != null && $(id)) $(id).value = String(obj[label]);
+  function setMaxButtons(){
+    const map = [[btnMax15,15],[btnMax30,30],[btnMax60,60]];
+    for (const [btn,val] of map){
+      const on = (maxSeconds === val);
+      btn.style.borderColor = on ? '#ff2d55' : 'rgba(255,255,255,.18)';
+      btn.style.background = on ? 'rgba(255,45,85,.18)' : 'rgba(0,0,0,.22)';
     }
-  }catch(e){}
-  updatePropertyStatus();
-}
-
-function clearProperty(){
-  for(const [id] of PROPERTY_FIELDS){
-    if($(id)) $(id).value = "";
-  }
-  try{ localStorage.removeItem("vc_property_data"); }catch(e){}
-  updatePropertyStatus();
-}
-
-/* ==========================
-   PROMPT
-========================== */
-function loadPrompt(){
-  try{
-    const saved = localStorage.getItem("vc_prompt_text");
-    promptText = (saved && saved.trim()) ? saved : BASE_PROMPT;
-  }catch(e){
-    promptText = BASE_PROMPT;
-  }
-  $("promptBox").value = promptText;
-}
-function lockPromptUI(){
-  $("promptBox").readOnly = true;
-  $("btnSavePrompt").disabled = true;
-  $("btnResetPrompt").disabled = true;
-  $("promptStatePill").textContent = "Bloccato";
-}
-function unlockPromptUI(){
-  $("promptBox").readOnly = false;
-  $("btnSavePrompt").disabled = false;
-  $("btnResetPrompt").disabled = false;
-  $("promptStatePill").textContent = "Sbloccato";
-}
-function savePrompt(){
-  promptText = $("promptBox").value || BASE_PROMPT;
-  try{ localStorage.setItem("vc_prompt_text", promptText); }catch(e){}
-}
-
-/* ==========================
-   QUESTIONS
-========================== */
-function showQuestionInOverlay(q){
-  $("questionBoxOverlay").textContent = q ? q : "";
-}
-function nextQuestion(){
-  qIdx = (qIdx + 1) % QUESTION_BANK.length;
-  currentQuestion = QUESTION_BANK[qIdx].q;
-  showQuestionInOverlay(currentQuestion);
-}
-
-/* ✅ MODIFICATO: include testo libero */
-function composeChatGPTInput(){
-  const q = String(currentQuestion || "").trim();
-  const freeText = String($("freeText").value || "").trim();
-
-  const data = getPropertyData();
-  const propertyBlock = propertyDataToText(data);
-
-  const base = (promptText || BASE_PROMPT).trim();
-
-  const inputParts = [];
-  inputParts.push("Dati immobile:");
-  inputParts.push(propertyBlock);
-  
-  if(freeText){
-    inputParts.push("");
-    inputParts.push("Testo libero aggiuntivo:");
-    inputParts.push(freeText);
-  }
-  
-  inputParts.push("");
-  inputParts.push("Richiesta:");
-  inputParts.push(`👉 ${q || "Crea una descrizione promozionale per questo immobile."}`);
-
-  return `${base}\n\nInput:\n${inputParts.join("\n")}`.trim();
-}
-
-/* ==========================
-   ROTAZIONE PROFILI
-========================== */
-function getRotationPlatforms(){
-  const items = [
-    { id:"rot_tiktok", platform:"tiktok" },
-    { id:"rot_instagram", platform:"instagram" },
-    { id:"rot_shorts", platform:"shorts" },
-    { id:"rot_facebook", platform:"facebook" },
-  ];
-  return items.filter(x => $(x.id).checked);
-}
-function setNextBadge(platform){
-  const map = {
-    tiktok: $("badge_tiktok"),
-    instagram: $("badge_instagram"),
-    shorts: $("badge_shorts"),
-    facebook: $("badge_facebook"),
-  };
-  Object.values(map).forEach(el => el.classList.remove("show"));
-  if(platform && map[platform]) map[platform].classList.add("show");
-}
-function getActivePlatform(){
-  const list = getRotationPlatforms();
-  if(list.length === 0) return null;
-  rotationIndex = rotationIndex % list.length;
-  return list[rotationIndex].platform;
-}
-function advancePlatform(){
-  const list = getRotationPlatforms();
-  if(list.length === 0) return;
-  rotationIndex = (rotationIndex + 1) % list.length;
-}
-function refreshProfileUI(){
-  const active = getActivePlatform();
-  setNextBadge(active);
-  $("activeProfileLabel").textContent = "Prossimo: " + (active ? active : "—");
-}
-
-/* ==========================
-   TELEPROMPTER SCROLL
-========================== */
-let startTimeSec = null;
-let isTeleprompterRunning = false;
-let teleprompterAnimationId = null;
-
-function resetTeleprompter(){
-  $("teleText").style.transform = "translateY(20px)";
-}
-function startTeleprompter(){
-  if(isTeleprompterRunning) return;
-  isTeleprompterRunning = true;
-  startTimeSec = performance.now() / 1000;
-  animateTele();
-}
-function stopTeleprompter(){
-  isTeleprompterRunning = false;
-  if(teleprompterAnimationId) cancelAnimationFrame(teleprompterAnimationId);
-  teleprompterAnimationId = null;
-}
-function restartTeleprompter(){
-  stopTeleprompter();
-  resetTeleprompter();
-  setTimeout(()=> startTeleprompter(), 120);
-}
-function animateTele(){
-  if(!isTeleprompterRunning) return;
-
-  const teleEl = $("teleText");
-  if(!teleEl){
-    teleprompterAnimationId = requestAnimationFrame(animateTele);
-    return;
   }
 
-  const now = performance.now()/1000;
-  const elapsed = now - startTimeSec;
-  const progress = (elapsed % teleprompterSeconds) / teleprompterSeconds;
-
-  const th = teleEl.scrollHeight || 900;
-  const startY = 20;
-  const endY = -th - 20;
-
-  const y = startY + (endY - startY) * progress;
-  teleEl.style.transform = `translateY(${y}px)`;
-
-  teleprompterAnimationId = requestAnimationFrame(animateTele);
-}
-
-function applyAnswer(answer){
-  const a = String(answer || "").trim();
-  if(!a) return false;
-  $("teleText").textContent = a;
-  resetTeleprompter();
-  stopTeleprompter();
-  setCaptionClean(a);
-  return true;
-}
-
-/* ==========================
-   SPEED UI
-========================== */
-function setSpeed(seconds){
-  teleprompterSeconds = seconds;
-  $("speedLabel").textContent = `Vel: ${seconds}s`;
-  $("speed120").checked = seconds === 120;
-  $("speed105").checked = seconds === 105;
-  $("speed90").checked  = seconds === 90;
-}
-
-/* ==========================
-   CAMERA + REC
-========================== */
-let camStream = null;
-let chunks = [];
-let rafCanvasId = null;
-
-let zoomValue = 1.0;
-const camEl = $("cam");
-const canvas = $("recCanvas");
-const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-async function applyZoom(v){
-  zoomValue = Number(v) || 1;
-  $("zoomVal").textContent = `${zoomValue.toFixed(1)}x`;
-  document.documentElement.style.setProperty("--zoom", String(zoomValue));
-}
-
-function drawFrame(){
-  const W = canvas.width, H = canvas.height;
-  if(camEl.readyState < 2){
-    ctx.fillStyle="black"; ctx.fillRect(0,0,W,H);
-    return;
-  }
-  const vw = camEl.videoWidth || 1280;
-  const vh = camEl.videoHeight || 720;
-
-  const z = Math.max(1, Math.min(zoomValue, 5));
-  const srcW = vw / z;
-  const srcH = vh / z;
-  const srcX = (vw - srcW)/2;
-  const srcY = (vh - srcH)/2;
-
-  ctx.drawImage(camEl, srcX, srcY, srcW, srcH, 0, 0, W, H);
-
-  // Overlay: prezzo (sopra) + nome visualizzato (sotto)
-  drawTopOverlay(W, H);
-
-}
-
-function drawTopOverlay(W, H){
-  const priceEl = $("f_price");
-  const nameEl = $("f_displayName");
-
-  const priceRaw = priceEl ? String(priceEl.value || "").trim() : "";
-  const nameRaw  = nameEl ? String(nameEl.value  || "").trim() : "";
-
-  if(!priceRaw && !nameRaw) return;
-
-  let priceText = priceRaw;
-  const num = Number(priceRaw.replace(/[^\d]/g, ""));
-  if(Number.isFinite(num) && num > 0){
-    try{
-      priceText = "€ " + num.toLocaleString("it-IT");
-    }catch(e){
-      priceText = "€ " + String(num);
-    }
-  }else if(priceRaw){
-    // se l'utente inserisce già simboli/testo, lo lasciamo com'è
-    priceText = priceRaw;
+  function syncOverlays(){
+    const raw = (topicInput.value || '').trim();
+    // "Topic overlay" = testo senza hashtag (così resta pulito)
+    const topic = raw.replace(/#[\s\S]*$/,'').trim();
+    const tags = parseHashtags(raw);
+    topicOverlay.textContent = topic;
+    hashOverlay.textContent = tags.length ? tags.join(' ') : '';
   }
 
-  ctx.save();
+  topicInput.addEventListener('input', syncOverlays);
+  btnClearTopic.addEventListener('click', () => { topicInput.value=''; syncOverlays(); });
 
-  const padX = Math.round(W * 0.04);
-  const padY = Math.round(H * 0.035);
+  // ---------------- IndexedDB ----------------
+  const DB_NAME = 'webtok_pro_db';
+  const DB_VER = 1;
+  const STORE = 'clips';
 
-  const maxW = W - padX*2;
-
-  // Dimensioni font scalabili
-  const priceFont = Math.max(22, Math.round(H * 0.06));
-  const nameFont  = Math.max(16, Math.round(H * 0.04));
-
-  // Blocchetto alto centrato
-  const centerX = Math.round(W/2);
-
-  // Background semi-trasparente (facoltativo, migliora leggibilità)
-  const lines = [];
-  if(priceText) lines.push({ text: priceText, font: `700 ${priceFont}px system-ui, -apple-system, Segoe UI, Roboto, Arial` });
-  if(nameRaw)   lines.push({ text: nameRaw,   font: `600 ${nameFont}px system-ui, -apple-system, Segoe UI, Roboto, Arial` });
-
-  let y = padY;
-
-  // calcolo altezza blocco
-  let blockH = 0;
-  for(const l of lines){
-    ctx.font = l.font;
-    blockH += Math.round((ctx.measureText("Mg").actualBoundingBoxAscent || (l === lines[0] ? priceFont : nameFont)) + (ctx.measureText("Mg").actualBoundingBoxDescent || 0));
-    blockH += Math.round(H * 0.01);
-  }
-  blockH += Math.round(H * 0.02);
-
-  const bgX = padX;
-  const bgY = padY - Math.round(H * 0.01);
-  const bgW = maxW;
-  const bgH = blockH;
-
-  ctx.fillStyle = "rgba(0,0,0,0.35)";
-  ctx.beginPath();
-  const r = Math.round(H * 0.02);
-  // rounded rect
-  const x=bgX, yy=bgY, w=bgW, h=bgH;
-  ctx.moveTo(x+r, yy);
-  ctx.arcTo(x+w, yy, x+w, yy+h, r);
-  ctx.arcTo(x+w, yy+h, x, yy+h, r);
-  ctx.arcTo(x, yy+h, x, yy, r);
-  ctx.arcTo(x, yy, x+w, yy, r);
-  ctx.closePath();
-  ctx.fill();
-
-  // testo
-  y = padY + Math.round(H * 0.03);
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillStyle = "white";
-  ctx.shadowColor = "rgba(0,0,0,0.45)";
-  ctx.shadowBlur = Math.round(H * 0.01);
-  ctx.shadowOffsetX = 0;
-  ctx.shadowOffsetY = Math.round(H * 0.004);
-
-  for(const l of lines){
-    ctx.font = l.font;
-    // riduzione font se troppo largo
-    let fontSize = parseInt(l.font.match(/(\d+)px/)[1], 10);
-    let t = l.text;
-    while(ctx.measureText(t).width > maxW && fontSize > 12){
-      fontSize -= 2;
-      l.font = l.font.replace(/(\d+)px/, `${fontSize}px`);
-      ctx.font = l.font;
-    }
-    ctx.fillText(t, centerX, y);
-    y += Math.round(fontSize * 1.15);
-  }
-
-  ctx.restore();
-}
-function startCanvasLoop(){
-  function loop(){
-    drawFrame();
-    rafCanvasId = requestAnimationFrame(loop);
-  }
-  loop();
-}
-
-async function startCamera(){
-  if(camStream){
-    camStream.getTracks().forEach(t=>t.stop());
-    camStream = null;
-  }
-  try{
-    camStream = await navigator.mediaDevices.getUserMedia({
-      audio:true,
-      video:{ facingMode:"user", width:{ideal:1280}, height:{ideal:720} }
+  function openDB(){
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(STORE)){
+          const os = db.createObjectStore(STORE, { keyPath: 'id' });
+          os.createIndex('createdAt', 'createdAt', { unique:false });
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
     });
-    camEl.srcObject = camStream;
-    await new Promise(res => camEl.onloadedmetadata = () => res());
-    try{ await camEl.play(); }catch(e){}
-    if(!rafCanvasId) startCanvasLoop();
-    return true;
-  }catch(err){
-    alert("Errore camera: " + err.message);
-    return false;
   }
-}
-async function ensureReady(){
-  if(!camStream){
-    const ok = await startCamera();
-    if(!ok) return false;
+
+  async function dbPutClip(clip){
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).put(clip);
+      tx.oncomplete = () => { db.close(); resolve(true); };
+      tx.onerror = () => { const e = tx.error; db.close(); reject(e); };
+    });
   }
-  if(!rafCanvasId) startCanvasLoop();
-  return true;
-}
 
-/* REC lamp */
-let recStartTs = null;
-let recTimerId = null;
-let isRecording = false;
-let recorder = null;
+  async function dbGetAllClips(){
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).getAll();
+      req.onsuccess = () => { db.close(); resolve(req.result || []); };
+      req.onerror = () => { const e = req.error; db.close(); reject(e); };
+    });
+  }
 
-function fmtTime(ms){
-  const sec = Math.floor(ms/1000);
-  const m = String(Math.floor(sec/60)).padStart(2,"0");
-  const s = String(sec%60).padStart(2,"0");
-  return `${m}:${s}`;
-}
-function startRecLamp(){
-  recStartTs = Date.now();
-  $("recLamp").style.display = "flex";
-  $("recTime").textContent = "REC 00:00";
-  recTimerId = setInterval(()=> {
-    $("recTime").textContent = `REC ${fmtTime(Date.now()-recStartTs)}`;
-  }, 250);
-}
-function stopRecLamp(){
-  $("recLamp").style.display = "none";
-  if(recTimerId) clearInterval(recTimerId);
-  recTimerId = null;
-  recStartTs = null;
-}
+  async function dbDeleteClip(id){
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).delete(id);
+      tx.oncomplete = () => { db.close(); resolve(true); };
+      tx.onerror = () => { const e = tx.error; db.close(); reject(e); };
+    });
+  }
 
-function downloadBlob(blob, filename){
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url), 2000);
-}
+  // ---------------- FEED RENDER ----------------
+  function getClipUrl(clip){
+    if (urlCache.has(clip.id)) return urlCache.get(clip.id);
+    const url = URL.createObjectURL(clip.blob);
+    urlCache.set(clip.id, url);
+    return url;
+  }
 
-/* Recordings */
-let recordings = [];
-let currentRecIndex = -1;
+  function getThumbUrl(clip){
+    if (!clip.thumbBlob) return null;
+    if (thumbUrlCache.has(clip.id)) return thumbUrlCache.get(clip.id);
+    const url = URL.createObjectURL(clip.thumbBlob);
+    thumbUrlCache.set(clip.id, url);
+    return url;
+  }
 
-function updateCounters(){
-  $("videoCounter").textContent = `Video: ${totalVideos}`;
-}
+  function revokeClipUrls(id){
+    if (urlCache.has(id)){
+      URL.revokeObjectURL(urlCache.get(id));
+      urlCache.delete(id);
+    }
+    if (thumbUrlCache.has(id)){
+      URL.revokeObjectURL(thumbUrlCache.get(id));
+      thumbUrlCache.delete(id);
+    }
+  }
 
-function renderRecList(){
-  const box = $("recList");
-  if(!recordings.length){ box.textContent = "—"; return; }
+  function removeAllPages(){
+    [...feed.querySelectorAll('.page')].forEach(p => p.remove());
+  }
 
-  box.innerHTML = recordings.map((r,i)=>{
-    const active = i===currentRecIndex ? " style='color:#ffd700; font-weight:950;'" : "";
-    return `
-      <div ${active} style="margin-bottom:10px;">
-        <div>
-          <a href="#" data-i="${i}" style="color:inherit; text-decoration:none;">
-            ${r.title}
-          </a>
-        </div>
-        <div style="opacity:.85; margin-top:6px;">${(r.question||"").slice(0,95)}</div>
-      </div>
-    `;
-  }).join("");
-
-  box.querySelectorAll("a[data-i]").forEach(a => a.addEventListener("click", (e)=>{
-    e.preventDefault();
-    const i = +a.dataset.i;
-    currentRecIndex = i;
-    $("playback").src = recordings[i].url;
-    $("playback").play().catch(()=>{});
-    renderRecList();
-  }));
-}
-
-function buildVideoTitle(videoNum, platform, question){
-  const k = keywordsFromQuestion(question) || "video";
-  const p = platform || "noplatform";
-  return `#${String(videoNum).padStart(3,"0")} • ${p} • ${k}`;
-}
-function buildFileName(videoNum, platform, question){
-  const k = keywordsFromQuestion(question) || "video";
-  const p = platform || "noplatform";
-  return `video_${String(videoNum).padStart(3,"0")}_${p}_${k}_${nowStamp()}.webm`;
-}
-
-function startRecording(){
-  if(!camStream){ alert("Attiva la camera."); return; }
-  if(recorder && recorder.state !== "inactive"){ return; }
-
-  startTeleprompter();
-  chunks = [];
-
-  const stream = canvas.captureStream(30);
-  const audioTrack = camStream.getAudioTracks?.()[0];
-  if(audioTrack) stream.addTrack(audioTrack);
-
-  const mimeCandidates = [
-    "video/webm;codecs=vp9,opus",
-    "video/webm;codecs=vp8,opus",
-    "video/webm"
-  ];
-  const mimeType = mimeCandidates.find(m => MediaRecorder.isTypeSupported(m)) || "";
-
-  recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-
-  recorder.ondataavailable = (e)=>{ if(e.data.size) chunks.push(e.data); };
-  recorder.onstart = ()=>{ isRecording = true; startRecLamp(); };
-
-  const qNow = String(currentQuestion || "").trim();
-  const capNow = String(lastCaptionClean || "").trim();
-  const platformNow = getActivePlatform();
-
-  recorder.onstop = ()=>{
-    stopRecLamp();
-    stopTeleprompter();
-    isRecording = false;
-
-    const blob = new Blob(chunks, { type: recorder.mimeType || "video/webm" });
-    totalVideos += 1;
-
-    const title = buildVideoTitle(totalVideos, platformNow, qNow);
-    const name = buildFileName(totalVideos, platformNow, qNow);
+  function downloadBlob(blob, topic){
+    const safe = (topic || 'video').replace(/[^\w\-]+/g,'_').slice(0,40);
+    const filename = `${safe}_${nowIso().replace(/[:.]/g,'-')}.webm`;
     const url = URL.createObjectURL(blob);
-
-    recordings.unshift({ title, name, url, blob, question: qNow, captionClean: capNow, platform: platformNow });
-    currentRecIndex = 0;
-
-    $("playback").src = url;
-    $("playback").load();
-    renderRecList();
-    updateCounters();
-
-    advancePlatform();
-    refreshProfileUI();
-  };
-
-  recorder.start(1000);
-}
-function stopRecording(){
-  if(recorder && recorder.state !== "inactive") recorder.stop();
-}
-
-/* ==========================
-   ✅ WHATSAPP INVIA FUNZIONE
-========================== */
-function sendToWhatsApp() {
-  const caption = captionWithHashtagsIfNeeded(lastCaptionClean);
-  if (!caption.trim()) {
-    alert("Prima genera una caption (usa '' o 'Copia caption').");
-    return;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
-  
-  const encodedMessage = encodeURIComponent(caption);
-  const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
-  
-  window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-}
 
-/* ==========================
-   NAV
-========================== */
-function goToGestionale(){
-  if(confirm("Vuoi tornare al gestionale?")){
-    if(isRecording) stopRecording();
-    setTimeout(()=> window.location.href = GESTIONALE_URL, 250);
-  }
-}
-
-/* ==========================
-   INIT
-========================== */
-document.addEventListener("DOMContentLoaded", ()=>{
-  // prompt
-  loadPrompt();
-  lockPromptUI();
-
-  // load property data + listeners
-  loadPropertyFromLS();
-  PROPERTY_FIELDS.forEach(([id])=>{
-    if($(id)){
-      $(id).addEventListener("input", ()=>{ updatePropertyStatus(); savePropertyToLS(); });
-      $(id).addEventListener("change", ()=>{ updatePropertyStatus(); savePropertyToLS(); });
-    }
-  });
-  $("btnClearProperty").addEventListener("click", clearProperty);
-
-  // testo libero salvataggio
-  $("freeText").addEventListener("input", function() {
-    try{ localStorage.setItem("vc_free_text", this.value); }catch(e){}
-  });
-  // carica testo libero salvato
-  try{
-    const savedFreeText = localStorage.getItem("vc_free_text") || "";
-    if(savedFreeText) $("freeText").value = savedFreeText;
-  }catch(e){}
-
-  // blocco risposta: vuoto di default
-  $("answerBox").value = "";
-
-  // restore caption preview only
-  try{
-    const savedCap = localStorage.getItem("vc_caption_clean") || "";
-    if(savedCap.trim() && $("chkRememberCaption").checked){
-      setCaptionClean(savedCap);
-    }
-  }catch(e){}
-
-  // init UI
-  $("btnBackTop").addEventListener("click", goToGestionale);
-  $("btnBackBottom").addEventListener("click", goToGestionale);
-
-  $("teleText").textContent = "";
-  showQuestionInOverlay("");
-  updateCounters();
-  refreshProfileUI();
-  renderRecList();
-  resetTeleprompter();
-  applyZoom(1.0);
-  setSpeed(105);
-
-  // speed radio-like
-  $("speed120").addEventListener("change", (e)=>{ if(e.target.checked) setSpeed(120); });
-  $("speed105").addEventListener("change", (e)=>{ if(e.target.checked) setSpeed(105); });
-  $("speed90").addEventListener("change", (e)=>{ if(e.target.checked) setSpeed(90); });
-
-  // rotation change resets index
-  ["rot_tiktok","rot_instagram","rot_shorts","rot_facebook"].forEach(id=>{
-    $(id).addEventListener("change", ()=>{
-      rotationIndex = 0;
-      refreshProfileUI();
+  // Autoplay/pause which page is visible
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(ent => {
+      const v = ent.target.querySelector('video');
+      if (!v) return;
+      if (ent.isIntersecting && ent.intersectionRatio >= 0.6){
+        v.play().catch(()=>{});
+      } else v.pause();
     });
-  });
+  }, { threshold: [0, 0.2, 0.6, 1] });
 
-  // nuova domanda
-  $("btnNext").addEventListener("click", ()=> nextQuestion());
-
-  // apri chatgpt + copia prompt+domanda (+ dati immobile + testo libero)
-  $("btnOpenChatGPTPasteQ").addEventListener("click", async ()=>{
-    if(!currentQuestion){
-      nextQuestion();
-    }
-    const payload = composeChatGPTInput();
-    await copyText(payload);
-    window.open(CHATGPT_URL, "_blank", "noopener");
-  });
-
-  // incolla risposta
-  $("btnPasteTop").addEventListener("click", async ()=>{
-    try{
-      const t = await readClipboardText();
-      $("answerBox").value = (t || "");
-    }catch(e){
-      alert("Clipboard bloccata: incolla manualmente nel blocco risposta.");
-    }
-  });
-
-  // ✅ WHATSAPP INVIA
-  $("btnSendWhatsApp").addEventListener("click", sendToWhatsApp);
-
-  // invia al teleprompter
-  $("btnSendTele").addEventListener("click", ()=>{
-    const ok = applyAnswer($("answerBox").value || "");
-    if(!ok) alert("Scrivi o incolla una risposta prima.");
-  });
-
-  // camera
-  $("btnCam").addEventListener("click", async ()=>{ await ensureReady(); });
-
-  // Teleprompter + REC
-  $("btnTeleRec").addEventListener("click", async ()=>{
-    const okCam = await ensureReady();
-    if(!okCam) return;
-
-    if(!currentQuestion){
-      nextQuestion();
-    }
-
-    const ans = ($("answerBox").value || "").trim();
-    if(!ans){
-      alert("Scrivi o incolla una risposta (o usa 'Incolla risposta') prima di registrare.");
-      return;
-    }
-
-    applyAnswer(ans);
-    startRecording();
-  });
-
-  $("btnStop").addEventListener("click", ()=> stopRecording());
-  $("btnRestart").addEventListener("click", ()=> restartTeleprompter());
-  $("zoom").addEventListener("input", (e)=> applyZoom(e.target.value));
-
-  // remember caption toggle
-  $("chkRememberCaption").addEventListener("change", ()=>{
-    if(!$("chkRememberCaption").checked){
-      try{ localStorage.removeItem("vc_caption_clean"); }catch(e){}
-    }else{
-      try{ localStorage.setItem("vc_caption_clean", lastCaptionClean || ""); }catch(e){}
-    }
-  });
-
-  // copia caption
-  $("btnCopyCaption").addEventListener("click", async ()=>{
-    const out = captionWithHashtagsIfNeeded(lastCaptionClean);
-    if(!out){ alert("Niente da copiare."); return; }
-    await copyText(out);
-  });
-
-  // download selected video
-  $("btnDownloadVideo").addEventListener("click", ()=>{
-    if(currentRecIndex < 0 || !recordings[currentRecIndex]){
-      alert("Seleziona un video dalla lista.");
-      return;
-    }
-    const r = recordings[currentRecIndex];
-    downloadBlob(r.blob, r.name);
-  });
-
-  // clear list
-  $("btnClearList").addEventListener("click", ()=>{
-    if(!recordings.length) return;
-    if(confirm("Svuotare la lista?")){
-      recordings.forEach(r => { try{ URL.revokeObjectURL(r.url); }catch(e){} });
-      recordings = [];
-      currentRecIndex = -1;
-      $("playback").removeAttribute("src");
-      $("playback").load();
-      renderRecList();
-      totalVideos = 0;
-      updateCounters();
-      rotationIndex = 0;
-      refreshProfileUI();
-    }
-  });
-
-  // prompt unlock/save/reset
-  $("btnUnlock").addEventListener("click", ()=>{
-    const code = ($("unlockCode").value || "").trim();
-    if(code === UNLOCK_CODE){
-      unlockPromptUI();
-    }else{
-      alert("Codice errato.");
-      lockPromptUI();
-    }
-  });
-
-  $("btnSavePrompt").addEventListener("click", ()=>{
-    savePrompt();
-    lockPromptUI();
-    $("unlockCode").value = "";
-  });
-
-  $("btnResetPrompt").addEventListener("click", ()=>{
-    $("promptBox").value = BASE_PROMPT;
-    savePrompt();
-    lockPromptUI();
-    $("unlockCode").value = "";
-  });
-
-  /* ==========================
-     ISTRUZIONI (MODAL)
-  ========================== */
-  const modal = $("instructionsModal");
-  function openInstructions(){
-    modal.classList.add("show");
-    modal.setAttribute("aria-hidden","false");
-  }
-  function closeInstructions(){
-    modal.classList.remove("show");
-    modal.setAttribute("aria-hidden","true");
+  function observePages(){
+    [...feed.querySelectorAll('.page')].forEach(p => io.observe(p));
   }
 
-  $("btnInstructions").addEventListener("click", openInstructions);
-  $("btnCloseInstructions").addEventListener("click", closeInstructions);
+  function renderFeed(){
+    removeAllPages();
+    emptyState.style.display = clips.length ? 'none' : 'grid';
 
-  // Chiudi cliccando fuori dalla card
-  modal.addEventListener("click", (e)=>{
-    if(e.target === modal) closeInstructions();
-  });
+    clips
+      .slice()
+      .sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''))
+      .forEach((clip, idx) => {
+        const page = document.createElement('div');
+        page.className = 'page';
 
-  // Chiudi con ESC
-  document.addEventListener("keydown", (e)=>{
-    if(e.key === "Escape" && modal.classList.contains("show")) closeInstructions();
-  });
+        const v = document.createElement('video');
+        v.src = getClipUrl(clip);
+        v.playsInline = true;
+        v.loop = true;
+        v.muted = false;
 
-  /* ==========================
-     UPLOAD VIDEO
-  ========================== */
-  $("btnUploadVideo").addEventListener("click", ()=>{
-    $("uploadVideo").click();
-  });
+        const shade = document.createElement('div');
+        shade.className = 'shade';
 
-  $("uploadVideo").addEventListener("change", ()=>{
-    const file = $("uploadVideo").files && $("uploadVideo").files[0];
-    if(!file) return;
+        const hud = document.createElement('div');
+        hud.className = 'hud';
 
-    const url = URL.createObjectURL(file);
+        const topRow = document.createElement('div');
+        topRow.className = 'row';
+        topRow.style.alignItems = 'center';
 
-    totalVideos += 1;
+        const left = document.createElement('div');
+        left.className = 'pill';
+        left.style.maxWidth = '100%';
 
-    const platformNow = "upload";
-    const qNow = String(currentQuestion || "").trim();
-    const title = `#${String(totalVideos).padStart(3,"0")} • ${platformNow} • file`;
+        const thumbUrl = getThumbUrl(clip);
+        left.innerHTML = `
+          <div style="display:flex; gap:10px; align-items:center; width:100%;">
+            <div style="
+              width:44px; height:44px; border-radius:14px;
+              background: rgba(0,0,0,.25);
+              border:1px solid rgba(255,255,255,.12);
+              overflow:hidden; flex:0 0 auto;">
+              ${thumbUrl ? `<img src="${thumbUrl}" alt="" style="width:100%; height:100%; object-fit:cover;">` : ''}
+            </div>
+            <div style="display:flex; flex-direction:column; gap:2px; width:100%;">
+              <div style="font-weight:950; font-size:14px;">${escapeHtml(clip.topic || 'Senza titolo')}</div>
+              <div style="opacity:.85; font-weight:850; font-size:12px;">${(clip.hashtags?.length ? escapeHtml(clip.hashtags.join(' ')) : '')}</div>
+            </div>
+          </div>
+        `;
+        topRow.appendChild(left);
 
-    recordings.unshift({
-      title,
-      name: file.name || `upload_${nowStamp()}.webm`,
-      url,
-      blob: file,
-      question: qNow,
-      captionClean: lastCaptionClean || "",
-      platform: platformNow
-    });
+        const bottomRow = document.createElement('div');
+        bottomRow.className = 'row';
+        bottomRow.style.alignItems = 'flex-end';
 
-    currentRecIndex = 0;
-    $("playback").src = url;
-    $("playback").load();
-    renderRecList();
-    updateCounters();
+        const spacer = document.createElement('div');
+        spacer.style.maxWidth = '90%';
 
-    // reset per permettere ricarica stesso file
-    $("uploadVideo").value = "";
-  });
-});
-</script>
+        const side = document.createElement('div');
+        side.className = 'side';
+        side.innerHTML = `
+          <button class="ghost" data-action="mute">🔊 Audio</button>
+          <button class="ghost" data-action="download">⬇️ Download</button>
+          <button class="ghost" data-action="delete">🗑️ Elimina</button>
+        `;
 
-<!-- ADDITION: Block ChatGPT integration and remove generated texts -->
-<script>
-/* Block creation logic */
-window.openChatGPTAndCopyPrompt = function(){};
-window.buildTeleprompterPrompt = function(){ return ""; };
-window.getNextQuestion = function(){};
+        bottomRow.appendChild(spacer);
+        bottomRow.appendChild(side);
 
-/* Remove any residual UI texts related to ChatGPT integration */
-document.addEventListener("DOMContentLoaded", () => {
-  const blockers = [
-    /ChatGPT/gi,
-    /Nuova domanda/gi,
-    /prompt/gi,
-    /domanda/gi
-  ];
-  document.querySelectorAll("body *").forEach(el => {
-    if (el.children.length === 0 && el.textContent) {
-      blockers.forEach(rx => {
-        if (rx.test(el.textContent)) el.textContent = "";
+        hud.appendChild(topRow);
+        hud.appendChild(bottomRow);
+
+        page.appendChild(v);
+        page.appendChild(shade);
+        page.appendChild(hud);
+
+        page.addEventListener('click', (e) => {
+          const btn = e.target.closest('button');
+          if (btn) return;
+          if (v.paused) v.play().catch(()=>{});
+          else v.pause();
+        });
+
+        side.addEventListener('click', async (e) => {
+          const b = e.target.closest('button');
+          if (!b) return;
+          const action = b.dataset.action;
+
+          if (action === 'mute'){
+            v.muted = !v.muted;
+            b.textContent = v.muted ? '🔇 Muto' : '🔊 Audio';
+          }
+          if (action === 'download'){
+            downloadBlob(clip.blob, clip.topic || 'video');
+          }
+          if (action === 'delete'){
+            try{
+              await dbDeleteClip(clip.id);
+              revokeClipUrls(clip.id);
+              clips = clips.filter(c => c.id !== clip.id);
+              renderFeed();
+            }catch(err){
+              console.error(err);
+              showToast(`⚠️ Errore eliminazione.`);
+            }
+          }
+        });
+
+        feed.appendChild(page);
+        if (idx === 0) setTimeout(() => v.play().catch(()=>{}), 50);
       });
+
+    observePages();
+  }
+
+  // ---------------- NAV ----------------
+  function openRecorder(){
+    recScreen.classList.add('active');
+    feed.style.display = 'none';
+    showToast(`👋 Premi <b>Attiva camera</b> → scrivi il ticker → registra.`, 3200);
+  }
+  function closeRecorder(){
+    recScreen.classList.remove('active');
+    feed.style.display = 'block';
+  }
+
+  // ---------------- CAMERA/RECORD ----------------
+  function stopStream(){
+    if (stream){
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
     }
-  });
-});
-</script>
+  }
 
+  async function startCamera(){
+    stopStream();
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode },
+        audio: true
+      });
+      livePreview.srcObject = stream;
 
-<!-- ADDITION: force external (rear) camera instead of internal -->
-<script>
-(function(){
-  const originalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
-  navigator.mediaDevices.getUserMedia = function(constraints){
-    if (constraints && constraints.video) {
-      if (typeof constraints.video === 'object') {
-        constraints.video.facingMode = { exact: "environment" };
-      } else {
-        constraints.video = { facingMode: { exact: "environment" } };
+      btnFlip.disabled = false;
+      btnRecord.disabled = false;
+      btnStop.disabled = true;
+
+      recordedBlob = null;
+      btnDownload.disabled = true;
+      btnSaveToFeed.disabled = true;
+
+      showToast(`Camera attiva (${facingMode === 'user' ? 'frontale' : 'posteriore'}).`);
+    }catch(e){
+      console.error(e);
+      showToast(`⚠️ Camera non disponibile. Apri su <b>https</b> o <b>localhost</b> e concedi i permessi.`);
+    }
+  }
+
+  function fitCanvasToVideo(){
+    const w = livePreview.videoWidth || 720;
+    const h = livePreview.videoHeight || 1280;
+    canvas.width = w;
+    canvas.height = h;
+  }
+
+  function setRecordingUI(isRec){
+    btnRecord.disabled = isRec;
+    btnStop.disabled = !isRec;
+    btnFlip.disabled = isRec;
+    btnStartCam.disabled = isRec;
+    btnBack.disabled = isRec;
+
+    if (isRec){
+      recBadge.style.display = 'inline-flex';
+    } else {
+      recBadge.style.display = 'none';
+      recTimeEl.textContent = '00:00';
+    }
+  }
+
+  function startRecTimer(){
+    recStartTs = Date.now();
+    recTimeEl.textContent = '00:00';
+    if (recTimerId) clearInterval(recTimerId);
+    recTimerId = setInterval(() => {
+      const sec = Math.floor((Date.now() - recStartTs)/1000);
+      recTimeEl.textContent = fmtTime(sec);
+      if (sec >= maxSeconds) stopRecording();
+    }, 200);
+  }
+  function stopRecTimer(){
+    if (recTimerId) clearInterval(recTimerId);
+    recTimerId = null;
+  }
+
+  async function runCountdown(){
+    if (!isCountdownOn) return true;
+    countdownEl.classList.add('show');
+    for (const n of [3,2,1]){
+      countdownEl.textContent = n;
+      await new Promise(r => setTimeout(r, 650));
+    }
+    countdownEl.classList.remove('show');
+    return true;
+  }
+
+  // ---------------- Teleprompter behavior ----------------
+  function applyTpUI(){
+    tpOverlay.classList.toggle('show', tpEnabled);
+    tpPanel.classList.toggle('show', tpEnabled);
+
+    btnTeleprompter.textContent = `Teleprompter: ${tpEnabled ? 'ON' : 'OFF'}`;
+    btnTeleprompter.style.borderColor = tpEnabled ? '#ff2d55' : 'rgba(255,255,255,.18)';
+    btnTeleprompter.style.background = tpEnabled ? 'rgba(255,45,85,.18)' : 'rgba(0,0,0,.22)';
+
+    tpMirror.textContent = `Mirror: ${tpMirrorOn ? 'ON' : 'OFF'}`;
+    tpPos.textContent = `Pos: ${tpPosition === 'bottom' ? 'BASSO' : 'ALTO'}`;
+    tpBurn.textContent = `Burn-in: ${tpBurnIn ? 'ON' : 'OFF'}`;
+
+    // overlay placement
+    tpOverlay.style.top = (tpPosition === 'top') ? '90px' : 'auto';
+    tpOverlay.style.bottom = (tpPosition === 'bottom') ? '90px' : 'auto';
+
+    // box opacity and viewport height and font size
+    const opacity = Number(tpBoxOpacity.value) / 100;
+    tpBox.style.background = `rgba(0,0,0,${opacity})`;
+    tpViewport.style.height = `${Number(tpHeight.value)}px`;
+    tpText.style.fontSize = `${Number(tpFont.value)}px`;
+
+    // mirror overlay text if desired
+    tpText.style.transform = tpMirrorOn ? 'scaleX(-1)' : 'none';
+  }
+
+  function setTpText(){
+    tpText.textContent = tpScript.value || '';
+  }
+
+  function tpResetScroll(){
+    tpScrollY = Number(tpViewport.style.height.replace('px','') || tpViewport.clientHeight);
+    tpLastTs = performance.now();
+    tpText.style.top = `${tpScrollY}px`;
+  }
+
+  function tpTick(ts){
+    if (!tpEnabled) return;
+    if (!tpPlaying){
+      tpLastTs = ts;
+      return;
+    }
+    const dt = Math.max(0, (ts - tpLastTs) / 1000);
+    tpLastTs = ts;
+
+    const speed = Number(tpSpeed.value); // px/s
+    tpScrollY -= speed * dt;
+    tpText.style.top = `${tpScrollY}px`;
+
+    // loop when fully passed
+    const textHeight = tpText.scrollHeight;
+    if (tpScrollY < -textHeight - 20){
+      tpResetScroll();
+    }
+  }
+
+  tpScript.addEventListener('input', () => { setTpText(); });
+  tpClear.addEventListener('click', () => { tpScript.value=''; setTpText(); tpResetScroll(); });
+
+  tpPlay.addEventListener('click', () => { tpPlaying = true; showToast(`▶️ Teleprompter play`, 1200); });
+  tpPause.addEventListener('click', () => { tpPlaying = false; showToast(`⏸️ Teleprompter pausa`, 1200); });
+  tpReset.addEventListener('click', () => { tpResetScroll(); showToast(`↺ Reset`, 1200); });
+
+  tpMirror.addEventListener('click', () => { tpMirrorOn = !tpMirrorOn; applyTpUI(); });
+  tpPos.addEventListener('click', () => { tpPosition = (tpPosition === 'bottom') ? 'top' : 'bottom'; applyTpUI(); });
+  tpBurn.addEventListener('click', () => { tpBurnIn = !tpBurnIn; applyTpUI(); });
+
+  [tpSpeed, tpFont, tpBoxOpacity, tpHeight].forEach(el => el.addEventListener('input', applyTpUI));
+
+  // ---------------- Overlay helpers ----------------
+  function drawTopicAndTags(){
+    // (manteniamo come overlay "statico" sopra al video)
+    const raw = (topicInput.value || '').trim();
+    const topic = raw.replace(/#[\s\S]*$/,'').trim();
+    const tags = parseHashtags(raw);
+
+    // Qui lasciamo solo un piccolo titolo sopra (opzionale).
+    // Se vuoi ZERO titolo, commenta tutto il blocco.
+    if (!topic && !tags.length) return;
+
+    const pad = Math.round(canvas.width * 0.06);
+    const maxWidth = canvas.width - pad*2;
+
+    if (topic){
+      const fontSize = Math.max(26, Math.round(canvas.width * 0.06));
+      ctx.font = `900 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+
+      const words = topic.split(/\s+/);
+      const lines = [];
+      let line = '';
+      for (const w of words){
+        const test = line ? line + ' ' + w : w;
+        if (ctx.measureText(test).width <= maxWidth) line = test;
+        else { if (line) lines.push(line); line = w; }
       }
+      if (line) lines.push(line);
+
+      const finalLines = lines.slice(0, 2);
+      const lineH = Math.round(fontSize * 1.12);
+      const x = pad;
+      const yBase = pad + 10;
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.75)';
+      ctx.shadowBlur = Math.round(fontSize * 0.55);
+      ctx.fillStyle = '#fff';
+
+      for (let i=0;i<finalLines.length;i++){
+        const y = yBase + (i * lineH);
+        ctx.fillText(finalLines[i], x, y);
+      }
+      ctx.restore();
     }
-    return originalGetUserMedia(constraints);
-  };
+
+    if (tags.length){
+      const fontSize2 = Math.max(16, Math.round(canvas.width * 0.038));
+      ctx.save();
+      ctx.font = `850 ${fontSize2}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+      ctx.textBaseline = 'top';
+      ctx.textAlign = 'left';
+      ctx.shadowColor = 'rgba(0,0,0,0.75)';
+      ctx.shadowBlur = Math.round(fontSize2 * 0.55);
+      ctx.fillStyle = '#fff';
+
+      const x = Math.round(canvas.width * 0.06);
+      const y = Math.round(canvas.width * 0.06) + 10 + Math.max(26, Math.round(canvas.width * 0.06)) * 2.1;
+      ctx.fillText(tags.join(' ').slice(0, 160), x, y);
+      ctx.restore();
+    }
+  }
+
+  function roundRect(context, x, y, w, h, r){
+    const rr = Math.min(r, w/2, h/2);
+    context.moveTo(x+rr, y);
+    context.arcTo(x+w, y, x+w, y+h, rr);
+    context.arcTo(x+w, y+h, x, y+h, rr);
+    context.arcTo(x, y+h, x, y, rr);
+    context.arcTo(x, y, x+w, y, rr);
+    context.closePath();
+  }
+
+  function wrapText(context, text, maxWidth){
+    const rawLines = String(text).replace(/\r/g,'').split('\n');
+    const out = [];
+    for (const raw of rawLines){
+      const words = raw.split(/\s+/).filter(Boolean);
+      if (!words.length){ out.push(''); continue; }
+      let line = '';
+      for (const w of words){
+        const test = line ? line + ' ' + w : w;
+        if (context.measureText(test).width <= maxWidth) line = test;
+        else { if (line) out.push(line); line = w; }
+      }
+      if (line) out.push(line);
+    }
+    return out;
+  }
+
+  function drawTeleprompterBurnIn(){
+    if (!tpEnabled || !tpBurnIn) return;
+    const script = tpScript.value || '';
+    if (!script.trim()) return;
+
+    const viewportH = Number(tpHeight.value);
+    const fontSize = Number(tpFont.value);
+    const opacity = Number(tpBoxOpacity.value)/100;
+
+    const margin = Math.round(canvas.width * 0.04);
+    const boxW = Math.min(canvas.width - margin*2, 900);
+    const boxX = Math.round((canvas.width - boxW)/2);
+
+    const boxY = (tpPosition === 'bottom')
+      ? canvas.height - margin - viewportH - 28 - Math.round(canvas.height * 0.09) /* spazio ticker */
+      : margin + 70;
+
+    ctx.save();
+    ctx.fillStyle = `rgba(0,0,0,${opacity})`;
+    ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+    ctx.lineWidth = 2;
+
+    const r = 26;
+    roundRect(ctx, boxX, boxY, boxW, viewportH + 28, r);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    roundRect(ctx, boxX, boxY, boxW, viewportH + 28, r);
+    ctx.clip();
+
+    ctx.font = `900 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = 'rgba(0,0,0,0.75)';
+    ctx.shadowBlur = Math.round(fontSize * 0.55);
+
+    const innerPad = 18;
+    const textX = boxX + innerPad;
+    const textYTop = boxY + 14 + tpScrollY;
+
+    if (tpMirrorOn){
+      ctx.translate(boxX + boxW/2, 0);
+      ctx.scale(-1, 1);
+      ctx.translate(-(boxX + boxW/2), 0);
+    }
+
+    const maxTextW = boxW - innerPad*2;
+    const lines = wrapText(ctx, script, maxTextW);
+    const lineH = Math.round(fontSize * 1.22);
+
+    let y = textYTop;
+    for (const line of lines){
+      ctx.fillText(line, textX, y);
+      y += lineH;
+    }
+
+    ctx.restore();
+  }
+
+  // ✅ Ticker (sottotitoli scorrevoli) — finisce nel video scaricato
+  function drawScrollingTicker(ctx, canvas, text, deltaTime){
+    if (!text || !text.trim()) return;
+
+    // Usa testo senza hashtag (pulito)
+    const t = text.trim().replace(/#[\s\S]*$/,'').trim().toUpperCase();
+    if (!t) return;
+
+    const barH = Math.round(canvas.height * 0.09);
+    const y = canvas.height - barH;
+
+    ctx.save();
+
+    // barra
+    ctx.fillStyle = 'rgba(0,0,0,0.65)';
+    ctx.fillRect(0, y, canvas.width, barH);
+
+    // testo
+    const fontSize = Math.max(18, Math.round(barH * 0.45));
+    ctx.font = `900 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.fillStyle = '#fff';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.75)';
+    ctx.shadowBlur = Math.round(fontSize * 0.6);
+
+    const textW = ctx.measureText(t).width;
+    const textY = y + barH/2;
+
+    tickerX -= tickerSpeed * deltaTime;
+
+    // reset
+    if (tickerX < -textW - 20){
+      tickerX = canvas.width + 20;
+    }
+
+    // disegna (una volta; se vuoi ripetizione doppia, dimmelo)
+    ctx.fillText(t, tickerX, textY);
+
+    ctx.restore();
+  }
+
+  // ---------------- Drawing Loop ----------------
+  function drawFrame(ts){
+    // delta time
+    if (!lastFrameTs) lastFrameTs = ts;
+    const deltaTime = Math.max(0, (ts - lastFrameTs) / 1000);
+    lastFrameTs = ts;
+
+    // tick teleprompter (scroll)
+    tpTick(ts);
+
+    // base video
+    ctx.drawImage(livePreview, 0, 0, canvas.width, canvas.height);
+
+    // overlays (come prima)
+    drawTopicAndTags();
+    drawTeleprompterBurnIn();
+
+    // ✅ ticker in basso
+    drawScrollingTicker(ctx, canvas, topicInput.value || '', deltaTime);
+
+    // REC dot (opzionale)
+    if (recorder && recorder.state === 'recording'){
+      ctx.save();
+      ctx.fillStyle = 'rgba(255,45,85,1)';
+      ctx.beginPath();
+      ctx.arc(24, 24, 10, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function startDrawingLoop(){
+    const loop = (ts) => {
+      drawFrame(ts);
+      rafId = requestAnimationFrame(loop);
+    };
+    rafId = requestAnimationFrame(loop);
+  }
+  function stopDrawingLoop(){
+    if (rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+
+  async function startRecording(){
+    if (!stream) return;
+
+    if (!livePreview.videoWidth){
+      await new Promise(r => livePreview.onloadedmetadata = () => r());
+    }
+    fitCanvasToVideo();
+
+    // reset ticker per ogni recording
+    tickerX = canvas.width + 20;
+    lastFrameTs = 0;
+
+    // reset teleprompter (se attivo)
+    if (tpEnabled){
+      setTpText();
+      applyTpUI();
+      if (!tpPlaying) tpResetScroll();
+      if (tpScrollY === 0) tpResetScroll();
+    }
+
+    await runCountdown();
+
+    startDrawingLoop();
+
+    const canvasStream = canvas.captureStream(30);
+    const audioTracks = stream.getAudioTracks();
+    const mixed = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
+
+    chunks = [];
+    recordedBlob = null;
+
+    const mimeType = bestMimeType();
+    recorder = new MediaRecorder(mixed, mimeType ? { mimeType } : undefined);
+
+    recorder.ondataavailable = (e) => { if (e.data && e.data.size>0) chunks.push(e.data); };
+
+    recorder.onstop = () => {
+      stopDrawingLoop();
+      stopRecTimer();
+      setRecordingUI(false);
+
+      recordedBlob = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
+
+      btnDownload.disabled = false;
+      btnSaveToFeed.disabled = false;
+
+      const mb = (recordedBlob.size/(1024*1024)).toFixed(2);
+      showToast(`✅ Clip pronto (${mb} MB). Premi <b>Salva nel feed</b> o <b>Download</b>.`);
+    };
+
+    recorder.start(250);
+    setRecordingUI(true);
+    btnDownload.disabled = true;
+    btnSaveToFeed.disabled = true;
+    startRecTimer();
+  }
+
+  function stopRecording(){
+    if (recorder && recorder.state === 'recording'){
+      recorder.stop();
+    }
+  }
+
+  function downloadRecorded(){
+    if (!recordedBlob) return;
+    const raw = (topicInput.value || '').trim();
+    const topic = raw.replace(/#[\s\S]*$/,'').trim() || 'video';
+    downloadBlob(recordedBlob, topic);
+    showToast(`⬇️ Download avviato.`);
+  }
+
+  // ---------------- Thumbnail from blob ----------------
+  async function makeThumbnailPng(videoBlob){
+    return new Promise((resolve) => {
+      const v = document.createElement('video');
+      v.playsInline = true;
+      v.muted = true;
+      v.preload = 'metadata';
+
+      const url = URL.createObjectURL(videoBlob);
+      v.src = url;
+
+      const clean = () => {
+        URL.revokeObjectURL(url);
+        v.src = '';
+      };
+
+      v.onloadeddata = async () => {
+        try{
+          const c = document.createElement('canvas');
+          const w = v.videoWidth || 360;
+          const h = v.videoHeight || 640;
+          c.width = Math.min(w, 360);
+          c.height = Math.round(c.width * (h / w));
+          const cctx = c.getContext('2d');
+          cctx.drawImage(v, 0, 0, c.width, c.height);
+          c.toBlob((b) => {
+            clean();
+            resolve(b || null);
+          }, 'image/png', 0.92);
+        }catch{
+          clean();
+          resolve(null);
+        }
+      };
+
+      v.onerror = () => { clean(); resolve(null); };
+    });
+  }
+
+  // ---------------- Save to DB ----------------
+  async function saveToFeed(){
+    if (!recordedBlob) return;
+
+    const raw = (topicInput.value || '').trim();
+    const topic = raw.replace(/#[\s\S]*$/,'').trim() || 'Senza titolo';
+    const hashtags = parseHashtags(raw);
+
+    const id = (crypto.randomUUID ? crypto.randomUUID() : (String(Date.now()) + Math.random().toString(16).slice(2)));
+    const createdAt = nowIso();
+    const mime = recordedBlob.type || 'video/webm';
+
+    showToast(`💾 Salvataggio…`, 1200);
+
+    const thumbBlob = await makeThumbnailPng(recordedBlob);
+
+    const clip = {
+      id,
+      createdAt,
+      topic,
+      hashtags,
+      mime,
+      blob: recordedBlob,
+      thumbBlob: thumbBlob || null
+    };
+
+    try{
+      await dbPutClip(clip);
+      clips.unshift(clip);
+      renderFeed();
+      closeRecorder();
+      feed.scrollTo({ top: 0, behavior: 'smooth' });
+
+      recordedBlob = null;
+      btnDownload.disabled = true;
+      btnSaveToFeed.disabled = true;
+
+      showToast(`📌 Salvato nel feed (persistente).`);
+    }catch(err){
+      console.error(err);
+      showToast(`⚠️ Errore salvataggio (spazio pieno?).`);
+    }
+  }
+
+  // ---------------- UI EVENTS ----------------
+  btnOpenRec.addEventListener('click', openRecorder);
+  btnBack.addEventListener('click', () => closeRecorder());
+
+  btnStartCam.addEventListener('click', startCamera);
+  btnFlip.addEventListener('click', async () => {
+    facingMode = (facingMode === 'user') ? 'environment' : 'user';
+    await startCamera();
+  });
+
+  btnMirrorPreview.addEventListener('click', () => {
+    mirrorPreview = !mirrorPreview;
+    livePreview.classList.toggle('mirrorPreview', mirrorPreview);
+    btnMirrorPreview.textContent = `Mirror preview: ${mirrorPreview ? 'ON' : 'OFF'}`;
+    btnMirrorPreview.style.borderColor = mirrorPreview ? '#ff2d55' : 'rgba(255,255,255,.18)';
+    btnMirrorPreview.style.background = mirrorPreview ? 'rgba(255,45,85,.18)' : 'rgba(0,0,0,.22)';
+  });
+
+  btnTeleprompter.addEventListener('click', () => {
+    tpEnabled = !tpEnabled;
+    if (tpEnabled){
+      setTpText();
+      applyTpUI();
+      tpResetScroll();
+      tpPlaying = true;
+      showToast(`📝 Teleprompter ON`, 1200);
+    } else {
+      tpPanel.classList.remove('show');
+      tpOverlay.classList.remove('show');
+      tpPlaying = false;
+      showToast(`📝 Teleprompter OFF`, 1200);
+    }
+    applyTpUI();
+  });
+
+  btnCountdownToggle.addEventListener('click', () => {
+    isCountdownOn = !isCountdownOn;
+    btnCountdownToggle.textContent = `Countdown: ${isCountdownOn ? 'ON' : 'OFF'}`;
+    btnCountdownToggle.style.borderColor = isCountdownOn ? '#ff2d55' : 'rgba(255,255,255,.18)';
+    btnCountdownToggle.style.background = isCountdownOn ? 'rgba(255,45,85,.18)' : 'rgba(0,0,0,.22)';
+  });
+
+  btnMax15.addEventListener('click', () => { maxSeconds = 15; setMaxButtons(); showToast(`⏱️ Max durata: 15s`, 1200); });
+  btnMax30.addEventListener('click', () => { maxSeconds = 30; setMaxButtons(); showToast(`⏱️ Max durata: 30s`, 1200); });
+  btnMax60.addEventListener('click', () => { maxSeconds = 60; setMaxButtons(); showToast(`⏱️ Max durata: 60s`, 1200); });
+
+  btnRecord.addEventListener('click', startRecording);
+  btnStop.addEventListener('click', stopRecording);
+  btnDownload.addEventListener('click', downloadRecorded);
+  btnSaveToFeed.addEventListener('click', saveToFeed);
+
+  // keyboard shortcuts (desktop)
+  window.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if (k === 'r' && !btnRecord.disabled) startRecording();
+    if (k === 's' && !btnStop.disabled) stopRecording();
+    if (k === 't') btnTeleprompter.click();
+  });
+
+  // ---------------- INIT ----------------
+  syncOverlays();
+  setMaxButtons();
+
+  // Load DB clips
+  (async () => {
+    try{
+      clips = await dbGetAllClips();
+      clips.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+      renderFeed();
+      showToast(`✅ Caricati ${clips.length} clip (IndexedDB).`, 1800);
+    }catch(err){
+      console.error(err);
+      showToast(`⚠️ IndexedDB non disponibile in questo browser.`);
+    }
+  })();
+
+  // hint
+  setTimeout(() => {
+    showToast(`Ticker: scrivi "TIPO · MQ · ZONA · € PREZZO" nel campo 🎯. Scorre in basso ed entra nel video.`, 5200);
+  }, 900);
+
 })();
 </script>
-
 </body>
 </html>
