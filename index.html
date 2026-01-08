@@ -244,6 +244,12 @@
       display:flex; align-items:center; gap:8px;
     }
     .brand small{ opacity:.75; font-weight:850; }
+    .topActions{
+      pointer-events:auto;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
     .fab{
       pointer-events:auto;
       border-radius:18px;
@@ -252,6 +258,10 @@
       border:1px solid #ff2d55;
       font-weight:950;
       cursor:pointer;
+    }
+    .fab.ghostFab{
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.16);
     }
     .empty{
       position:absolute; inset:0;
@@ -362,21 +372,30 @@
     <div class="feed" id="feed" aria-label="Feed verticale">
       <div class="topBar">
         <div class="brand">🎬 WebTok <small>PRO</small></div>
-        <button class="fab" id="btnOpenRec">+ Registra</button>
+
+        <!-- ✅ TOP ACTIONS (Upload + Record) -->
+        <div class="topActions">
+          <button class="fab ghostFab" id="btnUpload">⬆️ Upload</button>
+          <button class="fab" id="btnOpenRec">+ Registra</button>
+        </div>
       </div>
 
       <div class="empty" id="emptyState">
         <div class="card">
           <h2>Nessun clip ancora</h2>
           <p>
-            Premi <span class="kbd">+ Registra</span>, scrivi una riga tipo:
+            Premi <span class="kbd">+ Registra</span> oppure <span class="kbd">⬆️ Upload</span>.
+            <br><br>
+            Esempio ticker:
             <span class="kbd">TRILOCALE · 82 MQ · NAVIGLI · € 395.000</span>
-            e registra.
           </p>
         </div>
       </div>
       <!-- pages injected -->
     </div>
+
+    <!-- ✅ INPUT FILE NASCOSTO (UPLOAD VIDEO) -->
+    <input id="uploadInput" type="file" accept="video/*" hidden />
 
     <!-- RECORDER SCREEN -->
     <div class="recScreen" id="recScreen">
@@ -492,6 +511,10 @@
   const emptyState = document.getElementById('emptyState');
   const btnOpenRec = document.getElementById('btnOpenRec');
 
+  // ✅ UPLOAD
+  const btnUpload = document.getElementById('btnUpload');
+  const uploadInput = document.getElementById('uploadInput');
+
   const recScreen = document.getElementById('recScreen');
   const livePreview = document.getElementById('livePreview');
   const canvas = document.getElementById('recCanvas');
@@ -575,7 +598,7 @@
   let tpScrollY = 0; // px
   let tpLastTs = 0;
 
-  // ✅ Ticker (sottotitolo scorrevole)
+  // Ticker
   let tickerX = 0;
   const tickerSpeed = 90; // px/sec
   let lastFrameTs = 0;
@@ -626,7 +649,6 @@
 
   function syncOverlays(){
     const raw = (topicInput.value || '').trim();
-    // "Topic overlay" = testo senza hashtag (così resta pulito)
     const topic = raw.replace(/#[\s\S]*$/,'').trim();
     const tags = parseHashtags(raw);
     topicOverlay.textContent = topic;
@@ -730,7 +752,6 @@
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
-  // Autoplay/pause which page is visible
   const io = new IntersectionObserver((entries) => {
     entries.forEach(ent => {
       const v = ent.target.querySelector('video');
@@ -962,23 +983,18 @@
     tpPos.textContent = `Pos: ${tpPosition === 'bottom' ? 'BASSO' : 'ALTO'}`;
     tpBurn.textContent = `Burn-in: ${tpBurnIn ? 'ON' : 'OFF'}`;
 
-    // overlay placement
     tpOverlay.style.top = (tpPosition === 'top') ? '90px' : 'auto';
     tpOverlay.style.bottom = (tpPosition === 'bottom') ? '90px' : 'auto';
 
-    // box opacity and viewport height and font size
     const opacity = Number(tpBoxOpacity.value) / 100;
     tpBox.style.background = `rgba(0,0,0,${opacity})`;
     tpViewport.style.height = `${Number(tpHeight.value)}px`;
     tpText.style.fontSize = `${Number(tpFont.value)}px`;
 
-    // mirror overlay text if desired
     tpText.style.transform = tpMirrorOn ? 'scaleX(-1)' : 'none';
   }
 
-  function setTpText(){
-    tpText.textContent = tpScript.value || '';
-  }
+  function setTpText(){ tpText.textContent = tpScript.value || ''; }
 
   function tpResetScroll(){
     tpScrollY = Number(tpViewport.style.height.replace('px','') || tpViewport.clientHeight);
@@ -995,11 +1011,10 @@
     const dt = Math.max(0, (ts - tpLastTs) / 1000);
     tpLastTs = ts;
 
-    const speed = Number(tpSpeed.value); // px/s
+    const speed = Number(tpSpeed.value);
     tpScrollY -= speed * dt;
     tpText.style.top = `${tpScrollY}px`;
 
-    // loop when fully passed
     const textHeight = tpText.scrollHeight;
     if (tpScrollY < -textHeight - 20){
       tpResetScroll();
@@ -1021,13 +1036,10 @@
 
   // ---------------- Overlay helpers ----------------
   function drawTopicAndTags(){
-    // (manteniamo come overlay "statico" sopra al video)
     const raw = (topicInput.value || '').trim();
     const topic = raw.replace(/#[\s\S]*$/,'').trim();
     const tags = parseHashtags(raw);
 
-    // Qui lasciamo solo un piccolo titolo sopra (opzionale).
-    // Se vuoi ZERO titolo, commenta tutto il blocco.
     if (!topic && !tags.length) return;
 
     const pad = Math.round(canvas.width * 0.06);
@@ -1124,7 +1136,7 @@
     const boxX = Math.round((canvas.width - boxW)/2);
 
     const boxY = (tpPosition === 'bottom')
-      ? canvas.height - margin - viewportH - 28 - Math.round(canvas.height * 0.09) /* spazio ticker */
+      ? canvas.height - margin - viewportH - 28 - Math.round(canvas.height * 0.09)
       : margin + 70;
 
     ctx.save();
@@ -1171,11 +1183,9 @@
     ctx.restore();
   }
 
-  // ✅ Ticker (sottotitoli scorrevoli) — finisce nel video scaricato
   function drawScrollingTicker(ctx, canvas, text, deltaTime){
     if (!text || !text.trim()) return;
 
-    // Usa testo senza hashtag (pulito)
     const t = text.trim().replace(/#[\s\S]*$/,'').trim().toUpperCase();
     if (!t) return;
 
@@ -1183,12 +1193,9 @@
     const y = canvas.height - barH;
 
     ctx.save();
-
-    // barra
     ctx.fillStyle = 'rgba(0,0,0,0.65)';
     ctx.fillRect(0, y, canvas.width, barH);
 
-    // testo
     const fontSize = Math.max(18, Math.round(barH * 0.45));
     ctx.font = `900 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
     ctx.fillStyle = '#fff';
@@ -1201,38 +1208,28 @@
 
     tickerX -= tickerSpeed * deltaTime;
 
-    // reset
     if (tickerX < -textW - 20){
       tickerX = canvas.width + 20;
     }
 
-    // disegna (una volta; se vuoi ripetizione doppia, dimmelo)
     ctx.fillText(t, tickerX, textY);
-
     ctx.restore();
   }
 
   // ---------------- Drawing Loop ----------------
   function drawFrame(ts){
-    // delta time
     if (!lastFrameTs) lastFrameTs = ts;
     const deltaTime = Math.max(0, (ts - lastFrameTs) / 1000);
     lastFrameTs = ts;
 
-    // tick teleprompter (scroll)
     tpTick(ts);
 
-    // base video
     ctx.drawImage(livePreview, 0, 0, canvas.width, canvas.height);
 
-    // overlays (come prima)
     drawTopicAndTags();
     drawTeleprompterBurnIn();
-
-    // ✅ ticker in basso
     drawScrollingTicker(ctx, canvas, topicInput.value || '', deltaTime);
 
-    // REC dot (opzionale)
     if (recorder && recorder.state === 'recording'){
       ctx.save();
       ctx.fillStyle = 'rgba(255,45,85,1)';
@@ -1263,11 +1260,9 @@
     }
     fitCanvasToVideo();
 
-    // reset ticker per ogni recording
     tickerX = canvas.width + 20;
     lastFrameTs = 0;
 
-    // reset teleprompter (se attivo)
     if (tpEnabled){
       setTpText();
       applyTpUI();
@@ -1366,20 +1361,14 @@
   }
 
   // ---------------- Save to DB ----------------
-  async function saveToFeed(){
-    if (!recordedBlob) return;
-
-    const raw = (topicInput.value || '').trim();
-    const topic = raw.replace(/#[\s\S]*$/,'').trim() || 'Senza titolo';
-    const hashtags = parseHashtags(raw);
-
+  async function saveClipToDB({ blob, topic, hashtags }){
     const id = (crypto.randomUUID ? crypto.randomUUID() : (String(Date.now()) + Math.random().toString(16).slice(2)));
     const createdAt = nowIso();
-    const mime = recordedBlob.type || 'video/webm';
+    const mime = blob.type || 'video/webm';
 
     showToast(`💾 Salvataggio…`, 1200);
 
-    const thumbBlob = await makeThumbnailPng(recordedBlob);
+    const thumbBlob = await makeThumbnailPng(blob);
 
     const clip = {
       id,
@@ -1387,27 +1376,68 @@
       topic,
       hashtags,
       mime,
-      blob: recordedBlob,
+      blob,
       thumbBlob: thumbBlob || null
     };
 
+    await dbPutClip(clip);
+    clips.unshift(clip);
+    renderFeed();
+    feed.scrollTo({ top: 0, behavior: 'smooth' });
+    showToast(`📌 Video importato nel feed (persistente).`);
+  }
+
+  async function saveToFeed(){
+    if (!recordedBlob) return;
+
+    const raw = (topicInput.value || '').trim();
+    const topic = raw.replace(/#[\s\S]*$/,'').trim() || 'Senza titolo';
+    const hashtags = parseHashtags(raw);
+
     try{
-      await dbPutClip(clip);
-      clips.unshift(clip);
-      renderFeed();
+      await saveClipToDB({ blob: recordedBlob, topic, hashtags });
       closeRecorder();
-      feed.scrollTo({ top: 0, behavior: 'smooth' });
 
       recordedBlob = null;
       btnDownload.disabled = true;
       btnSaveToFeed.disabled = true;
-
-      showToast(`📌 Salvato nel feed (persistente).`);
     }catch(err){
       console.error(err);
       showToast(`⚠️ Errore salvataggio (spazio pieno?).`);
     }
   }
+
+  // ✅ UPLOAD HANDLER
+  function baseName(filename){
+    const name = (filename || 'video').replace(/\.[^.]+$/,'');
+    return name || 'video';
+  }
+
+  btnUpload.addEventListener('click', () => {
+    uploadInput.click();
+  });
+
+  uploadInput.addEventListener('change', async () => {
+    const file = uploadInput.files && uploadInput.files[0];
+    uploadInput.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('video/')){
+      showToast(`⚠️ Seleziona un file video.`);
+      return;
+    }
+
+    // Nota: alcuni browser/OS possono dare mp4. Va bene: salviamo il blob.
+    const topic = baseName(file.name);
+    const hashtags = []; // se vuoi: estrai hashtag dal nome file (dimmi e lo faccio)
+
+    try{
+      await saveClipToDB({ blob: file, topic, hashtags });
+    }catch(err){
+      console.error(err);
+      showToast(`⚠️ Upload fallito. Forse il file è troppo grande o lo spazio è pieno.`);
+    }
+  });
 
   // ---------------- UI EVENTS ----------------
   btnOpenRec.addEventListener('click', openRecorder);
@@ -1468,11 +1498,40 @@
     if (k === 't') btnTeleprompter.click();
   });
 
+  // ---------------- REC TIMER ----------------
+  function startRecTimer(){
+    recStartTs = Date.now();
+    recTimeEl.textContent = '00:00';
+    if (recTimerId) clearInterval(recTimerId);
+    recTimerId = setInterval(() => {
+      const sec = Math.floor((Date.now() - recStartTs)/1000);
+      recTimeEl.textContent = fmtTime(sec);
+      if (sec >= maxSeconds) stopRecording();
+    }, 200);
+  }
+  function stopRecTimer(){
+    if (recTimerId) clearInterval(recTimerId);
+    recTimerId = null;
+  }
+  function setRecordingUI(isRec){
+    btnRecord.disabled = isRec;
+    btnStop.disabled = !isRec;
+    btnFlip.disabled = isRec;
+    btnStartCam.disabled = isRec;
+    btnBack.disabled = isRec;
+
+    if (isRec){
+      recBadge.style.display = 'inline-flex';
+    } else {
+      recBadge.style.display = 'none';
+      recTimeEl.textContent = '00:00';
+    }
+  }
+
   // ---------------- INIT ----------------
   syncOverlays();
   setMaxButtons();
 
-  // Load DB clips
   (async () => {
     try{
       clips = await dbGetAllClips();
@@ -1485,7 +1544,6 @@
     }
   })();
 
-  // hint
   setTimeout(() => {
     showToast(`Ticker: scrivi "TIPO · MQ · ZONA · € PREZZO" nel campo 🎯. Scorre in basso ed entra nel video.`, 5200);
   }, 900);
