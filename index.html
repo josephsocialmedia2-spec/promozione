@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>WebTok PRO — Recorder + Feed + Teleprompter + Ticker + IndexedDB</title>
+  <title>WebTok PRO — Recorder + Feed + Upload + IndexedDB</title>
   <style>
     :root { color-scheme: dark; }
     *{ box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
@@ -70,10 +70,7 @@
     }
     .recStage canvas{ display:none; } /* record source */
 
-    /* Preview mirror (optional) */
-    .mirrorPreview{
-      transform: scaleX(-1);
-    }
+    .mirrorPreview{ transform: scaleX(-1); }
 
     /* HUD */
     .hud{
@@ -212,7 +209,7 @@
       position:absolute;
       left:50%; transform:translateX(-50%);
       bottom:92px;
-      background:rgba(0,0,0,.70);
+      background:rgba(0,0,0,.74);
       border:1px solid rgba(255,255,255,.14);
       padding:10px 12px;
       border-radius:14px;
@@ -222,7 +219,6 @@
       display:none;
       z-index:50;
     }
-    .toast a{ color:#7ee787; font-weight:900; text-decoration:none; }
 
     /* TOP BAR on FEED */
     .topBar{
@@ -246,9 +242,7 @@
     .brand small{ opacity:.75; font-weight:850; }
     .topActions{
       pointer-events:auto;
-      display:flex;
-      gap:10px;
-      align-items:center;
+      display:flex; gap:10px; align-items:center;
     }
     .fab{
       pointer-events:auto;
@@ -263,10 +257,10 @@
       background: rgba(0,0,0,.22);
       border:1px solid rgba(255,255,255,.16);
     }
+
     .empty{
       position:absolute; inset:0;
-      display:grid;
-      place-items:center;
+      display:grid; place-items:center;
       padding:24px;
       text-align:center;
       color:rgba(255,255,255,.9);
@@ -293,7 +287,7 @@
       white-space:nowrap;
     }
 
-    /* Teleprompter UI panel */
+    /* Teleprompter */
     .tpPanel{
       position:absolute;
       left:16px; right:16px;
@@ -303,33 +297,16 @@
       display:none;
     }
     .tpPanel.show{ display:block; }
-
-    .tpGrid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap:10px;
-    }
-    .tpControls{
-      display:flex; gap:10px; flex-wrap:wrap;
-    }
+    .tpGrid{ display:grid; grid-template-columns: 1fr; gap:10px; }
+    .tpControls{ display:flex; gap:10px; flex-wrap:wrap; }
     .tpControls button{
       padding:10px 12px;
       border-radius:14px;
       font-size:13px;
       font-weight:950;
     }
-    .tpControls .pill{
-      padding:10px 12px;
-      border-radius:16px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      width:100%;
-    }
-    .tpControls input[type="range"]{ width:100%; }
     .tpLabel{ font-size:12px; opacity:.85; font-weight:900; }
 
-    /* Teleprompter overlay (what user reads) */
     .tpOverlay{
       position:absolute;
       left:0; right:0;
@@ -349,14 +326,12 @@
       padding:14px 14px 10px;
     }
     .tpViewport{
-      height:140px; /* will be adjusted */
+      height:140px;
       overflow:hidden;
       position:relative;
     }
     .tpText{
-      position:absolute;
-      left:0; right:0;
-      top:0;
+      position:absolute; left:0; right:0; top:0;
       font-weight:900;
       line-height:1.2;
       text-shadow: 0 4px 18px rgba(0,0,0,.75);
@@ -373,7 +348,6 @@
       <div class="topBar">
         <div class="brand">🎬 WebTok <small>PRO</small></div>
 
-        <!-- ✅ TOP ACTIONS (Upload + Record) -->
         <div class="topActions">
           <button class="fab ghostFab" id="btnUpload">⬆️ Upload</button>
           <button class="fab" id="btnOpenRec">+ Registra</button>
@@ -384,18 +358,16 @@
         <div class="card">
           <h2>Nessun clip ancora</h2>
           <p>
-            Premi <span class="kbd">+ Registra</span> oppure <span class="kbd">⬆️ Upload</span>.
-            <br><br>
-            Esempio ticker:
-            <span class="kbd">TRILOCALE · 82 MQ · NAVIGLI · € 395.000</span>
+            Premi <span class="kbd">+ Registra</span> oppure <span class="kbd">⬆️ Upload</span>.<br><br>
+            Esempio ticker: <span class="kbd">TRILOCALE · 82 MQ · NAVIGLI · € 395.000</span>
           </p>
         </div>
       </div>
       <!-- pages injected -->
     </div>
 
-    <!-- ✅ INPUT FILE NASCOSTO (UPLOAD VIDEO) -->
-    <input id="uploadInput" type="file" accept="video/*" hidden />
+    <!-- ✅ Upload multiplo -->
+    <input id="uploadInput" type="file" accept="video/*" multiple hidden />
 
     <!-- RECORDER SCREEN -->
     <div class="recScreen" id="recScreen">
@@ -404,7 +376,6 @@
         <canvas id="recCanvas"></canvas>
       </div>
 
-      <!-- Teleprompter overlay (visual) -->
       <div class="tpOverlay" id="tpOverlay">
         <div class="tpBox" id="tpBox">
           <div class="tpViewport" id="tpViewport">
@@ -413,12 +384,11 @@
         </div>
       </div>
 
-      <!-- Teleprompter panel (controls) -->
       <div class="tpPanel" id="tpPanel">
         <div class="tpGrid">
           <div class="pill">
             <span style="font-size:14px;">📝</span>
-            <textarea id="tpScript" rows="3" placeholder="Script teleprompter… (va a capo quando vuoi)"></textarea>
+            <textarea id="tpScript" rows="3" placeholder="Script teleprompter…"></textarea>
             <span class="mini" id="tpClear">Pulisci</span>
           </div>
 
@@ -460,7 +430,7 @@
         <div class="row">
           <div class="pill" style="max-width:100%;">
             <span style="font-size:14px;">🎯</span>
-            <input id="topicInput" placeholder="Ticker (es: TRILOCALE · 82 MQ · NAVIGLI · € 395.000) + hashtag" maxlength="140" />
+            <input id="topicInput" placeholder="Ticker + hashtag" maxlength="140" />
             <span class="mini" id="btnClearTopic">Pulisci</span>
           </div>
         </div>
@@ -511,7 +481,6 @@
   const emptyState = document.getElementById('emptyState');
   const btnOpenRec = document.getElementById('btnOpenRec');
 
-  // ✅ UPLOAD
   const btnUpload = document.getElementById('btnUpload');
   const uploadInput = document.getElementById('uploadInput');
 
@@ -585,22 +554,22 @@
 
   // Feed clips (persisted in IndexedDB)
   let clips = []; // { id, createdAt, topic, hashtags, blob, mime, thumbBlob }
-  const urlCache = new Map(); // id -> objectURL
+  const urlCache = new Map();
   const thumbUrlCache = new Map();
 
   // Teleprompter
   let tpEnabled = false;
   let tpPlaying = false;
   let tpMirrorOn = false;
-  let tpPosition = 'bottom'; // 'bottom' | 'top'
+  let tpPosition = 'bottom';
   let tpBurnIn = true;
 
-  let tpScrollY = 0; // px
+  let tpScrollY = 0;
   let tpLastTs = 0;
 
   // Ticker
   let tickerX = 0;
-  const tickerSpeed = 90; // px/sec
+  const tickerSpeed = 90;
   let lastFrameTs = 0;
 
   // ---------------- HELPERS ----------------
@@ -608,7 +577,7 @@
   const fmtTime = (sec) => `${pad2(Math.floor(sec/60))}:${pad2(sec%60)}`;
   const nowIso = () => new Date().toISOString();
 
-  function showToast(html, ms=3500){
+  function showToast(html, ms=2800){
     toast.innerHTML = html;
     toast.style.display = 'block';
     if (ms) setTimeout(() => toast.style.display = 'none', ms);
@@ -654,7 +623,6 @@
     topicOverlay.textContent = topic;
     hashOverlay.textContent = tags.length ? tags.join(' ') : '';
   }
-
   topicInput.addEventListener('input', syncOverlays);
   btnClearTopic.addEventListener('click', () => { topicInput.value=''; syncOverlays(); });
 
@@ -752,6 +720,7 @@
     setTimeout(() => URL.revokeObjectURL(url), 1500);
   }
 
+  // Autoplay/pause which page is visible
   const io = new IntersectionObserver((entries) => {
     entries.forEach(ent => {
       const v = ent.target.querySelector('video');
@@ -764,6 +733,22 @@
 
   function observePages(){
     [...feed.querySelectorAll('.page')].forEach(p => io.observe(p));
+  }
+
+  async function renameClip(clip){
+    const next = prompt("Rinomina clip:", clip.topic || "Senza titolo");
+    if (next === null) return;
+    const title = next.trim();
+    if (!title) return;
+    clip.topic = title;
+    try{
+      await dbPutClip(clip);
+      renderFeed();
+      showToast("✅ Titolo aggiornato");
+    }catch(e){
+      console.error(e);
+      showToast("⚠️ Errore salvataggio titolo");
+    }
   }
 
   function renderFeed(){
@@ -779,9 +764,19 @@
 
         const v = document.createElement('video');
         v.src = getClipUrl(clip);
+
+        // ✅ FIX: autoplay affidabile su mobile
         v.playsInline = true;
+        v.setAttribute('playsinline', '');
         v.loop = true;
-        v.muted = false;
+        v.muted = true;       // << importantissimo
+        v.autoplay = true;
+        v.preload = 'metadata';
+        v.controls = false;
+
+        // ✅ poster thumbnail (così “si vede” sempre)
+        const thumbUrl = getThumbUrl(clip);
+        if (thumbUrl) v.setAttribute('poster', thumbUrl);
 
         const shade = document.createElement('div');
         shade.className = 'shade';
@@ -797,7 +792,6 @@
         left.className = 'pill';
         left.style.maxWidth = '100%';
 
-        const thumbUrl = getThumbUrl(clip);
         left.innerHTML = `
           <div style="display:flex; gap:10px; align-items:center; width:100%;">
             <div style="
@@ -807,13 +801,22 @@
               overflow:hidden; flex:0 0 auto;">
               ${thumbUrl ? `<img src="${thumbUrl}" alt="" style="width:100%; height:100%; object-fit:cover;">` : ''}
             </div>
-            <div style="display:flex; flex-direction:column; gap:2px; width:100%;">
-              <div style="font-weight:950; font-size:14px;">${escapeHtml(clip.topic || 'Senza titolo')}</div>
-              <div style="opacity:.85; font-weight:850; font-size:12px;">${(clip.hashtags?.length ? escapeHtml(clip.hashtags.join(' ')) : '')}</div>
+            <div style="display:flex; flex-direction:column; gap:2px; width:100%; min-width:0;">
+              <div data-rename="1" style="font-weight:950; font-size:14px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${escapeHtml(clip.topic || 'Senza titolo')}
+              </div>
+              <div style="opacity:.85; font-weight:850; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${(clip.hashtags?.length ? escapeHtml(clip.hashtags.join(' ')) : '')}
+              </div>
             </div>
           </div>
         `;
         topRow.appendChild(left);
+
+        left.addEventListener('click', (e) => {
+          const r = e.target.closest('[data-rename="1"]');
+          if (r) renameClip(clip);
+        });
 
         const bottomRow = document.createElement('div');
         bottomRow.className = 'row';
@@ -825,7 +828,7 @@
         const side = document.createElement('div');
         side.className = 'side';
         side.innerHTML = `
-          <button class="ghost" data-action="mute">🔊 Audio</button>
+          <button class="ghost" data-action="mute">🔇 Muto</button>
           <button class="ghost" data-action="download">⬇️ Download</button>
           <button class="ghost" data-action="delete">🗑️ Elimina</button>
         `;
@@ -843,6 +846,7 @@
         page.addEventListener('click', (e) => {
           const btn = e.target.closest('button');
           if (btn) return;
+          // tap: play/pause
           if (v.paused) v.play().catch(()=>{});
           else v.pause();
         });
@@ -854,6 +858,7 @@
 
           if (action === 'mute'){
             v.muted = !v.muted;
+            if (!v.muted) v.play().catch(()=>{});
             b.textContent = v.muted ? '🔇 Muto' : '🔊 Audio';
           }
           if (action === 'download'){
@@ -865,6 +870,7 @@
               revokeClipUrls(clip.id);
               clips = clips.filter(c => c.id !== clip.id);
               renderFeed();
+              showToast("🗑️ Eliminato");
             }catch(err){
               console.error(err);
               showToast(`⚠️ Errore eliminazione.`);
@@ -883,7 +889,7 @@
   function openRecorder(){
     recScreen.classList.add('active');
     feed.style.display = 'none';
-    showToast(`👋 Premi <b>Attiva camera</b> → scrivi il ticker → registra.`, 3200);
+    showToast(`👋 Premi <b>Attiva camera</b> → scrivi ticker → registra.`, 2600);
   }
   function closeRecorder(){
     recScreen.classList.remove('active');
@@ -918,7 +924,7 @@
       showToast(`Camera attiva (${facingMode === 'user' ? 'frontale' : 'posteriore'}).`);
     }catch(e){
       console.error(e);
-      showToast(`⚠️ Camera non disponibile. Apri su <b>https</b> o <b>localhost</b> e concedi i permessi.`);
+      showToast(`⚠️ Camera non disponibile. Usa <b>https</b> o <b>localhost</b> e concedi i permessi.`);
     }
   }
 
@@ -990,7 +996,6 @@
     tpBox.style.background = `rgba(0,0,0,${opacity})`;
     tpViewport.style.height = `${Number(tpHeight.value)}px`;
     tpText.style.fontSize = `${Number(tpFont.value)}px`;
-
     tpText.style.transform = tpMirrorOn ? 'scaleX(-1)' : 'none';
   }
 
@@ -1034,67 +1039,7 @@
 
   [tpSpeed, tpFont, tpBoxOpacity, tpHeight].forEach(el => el.addEventListener('input', applyTpUI));
 
-  // ---------------- Overlay helpers ----------------
-  function drawTopicAndTags(){
-    const raw = (topicInput.value || '').trim();
-    const topic = raw.replace(/#[\s\S]*$/,'').trim();
-    const tags = parseHashtags(raw);
-
-    if (!topic && !tags.length) return;
-
-    const pad = Math.round(canvas.width * 0.06);
-    const maxWidth = canvas.width - pad*2;
-
-    if (topic){
-      const fontSize = Math.max(26, Math.round(canvas.width * 0.06));
-      ctx.font = `900 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-      ctx.textBaseline = 'top';
-      ctx.textAlign = 'left';
-
-      const words = topic.split(/\s+/);
-      const lines = [];
-      let line = '';
-      for (const w of words){
-        const test = line ? line + ' ' + w : w;
-        if (ctx.measureText(test).width <= maxWidth) line = test;
-        else { if (line) lines.push(line); line = w; }
-      }
-      if (line) lines.push(line);
-
-      const finalLines = lines.slice(0, 2);
-      const lineH = Math.round(fontSize * 1.12);
-      const x = pad;
-      const yBase = pad + 10;
-
-      ctx.save();
-      ctx.shadowColor = 'rgba(0,0,0,0.75)';
-      ctx.shadowBlur = Math.round(fontSize * 0.55);
-      ctx.fillStyle = '#fff';
-
-      for (let i=0;i<finalLines.length;i++){
-        const y = yBase + (i * lineH);
-        ctx.fillText(finalLines[i], x, y);
-      }
-      ctx.restore();
-    }
-
-    if (tags.length){
-      const fontSize2 = Math.max(16, Math.round(canvas.width * 0.038));
-      ctx.save();
-      ctx.font = `850 ${fontSize2}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-      ctx.textBaseline = 'top';
-      ctx.textAlign = 'left';
-      ctx.shadowColor = 'rgba(0,0,0,0.75)';
-      ctx.shadowBlur = Math.round(fontSize2 * 0.55);
-      ctx.fillStyle = '#fff';
-
-      const x = Math.round(canvas.width * 0.06);
-      const y = Math.round(canvas.width * 0.06) + 10 + Math.max(26, Math.round(canvas.width * 0.06)) * 2.1;
-      ctx.fillText(tags.join(' ').slice(0, 160), x, y);
-      ctx.restore();
-    }
-  }
-
+  // ---------------- Overlay drawing ----------------
   function roundRect(context, x, y, w, h, r){
     const rr = Math.min(r, w/2, h/2);
     context.moveTo(x+rr, y);
@@ -1128,427 +1073,4 @@
     if (!script.trim()) return;
 
     const viewportH = Number(tpHeight.value);
-    const fontSize = Number(tpFont.value);
-    const opacity = Number(tpBoxOpacity.value)/100;
-
-    const margin = Math.round(canvas.width * 0.04);
-    const boxW = Math.min(canvas.width - margin*2, 900);
-    const boxX = Math.round((canvas.width - boxW)/2);
-
-    const boxY = (tpPosition === 'bottom')
-      ? canvas.height - margin - viewportH - 28 - Math.round(canvas.height * 0.09)
-      : margin + 70;
-
-    ctx.save();
-    ctx.fillStyle = `rgba(0,0,0,${opacity})`;
-    ctx.strokeStyle = 'rgba(255,255,255,0.16)';
-    ctx.lineWidth = 2;
-
-    const r = 26;
-    roundRect(ctx, boxX, boxY, boxW, viewportH + 28, r);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.beginPath();
-    roundRect(ctx, boxX, boxY, boxW, viewportH + 28, r);
-    ctx.clip();
-
-    ctx.font = `900 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-    ctx.textBaseline = 'top';
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#fff';
-    ctx.shadowColor = 'rgba(0,0,0,0.75)';
-    ctx.shadowBlur = Math.round(fontSize * 0.55);
-
-    const innerPad = 18;
-    const textX = boxX + innerPad;
-    const textYTop = boxY + 14 + tpScrollY;
-
-    if (tpMirrorOn){
-      ctx.translate(boxX + boxW/2, 0);
-      ctx.scale(-1, 1);
-      ctx.translate(-(boxX + boxW/2), 0);
-    }
-
-    const maxTextW = boxW - innerPad*2;
-    const lines = wrapText(ctx, script, maxTextW);
-    const lineH = Math.round(fontSize * 1.22);
-
-    let y = textYTop;
-    for (const line of lines){
-      ctx.fillText(line, textX, y);
-      y += lineH;
-    }
-
-    ctx.restore();
-  }
-
-  function drawScrollingTicker(ctx, canvas, text, deltaTime){
-    if (!text || !text.trim()) return;
-
-    const t = text.trim().replace(/#[\s\S]*$/,'').trim().toUpperCase();
-    if (!t) return;
-
-    const barH = Math.round(canvas.height * 0.09);
-    const y = canvas.height - barH;
-
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.65)';
-    ctx.fillRect(0, y, canvas.width, barH);
-
-    const fontSize = Math.max(18, Math.round(barH * 0.45));
-    ctx.font = `900 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
-    ctx.fillStyle = '#fff';
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0,0,0,0.75)';
-    ctx.shadowBlur = Math.round(fontSize * 0.6);
-
-    const textW = ctx.measureText(t).width;
-    const textY = y + barH/2;
-
-    tickerX -= tickerSpeed * deltaTime;
-
-    if (tickerX < -textW - 20){
-      tickerX = canvas.width + 20;
-    }
-
-    ctx.fillText(t, tickerX, textY);
-    ctx.restore();
-  }
-
-  // ---------------- Drawing Loop ----------------
-  function drawFrame(ts){
-    if (!lastFrameTs) lastFrameTs = ts;
-    const deltaTime = Math.max(0, (ts - lastFrameTs) / 1000);
-    lastFrameTs = ts;
-
-    tpTick(ts);
-
-    ctx.drawImage(livePreview, 0, 0, canvas.width, canvas.height);
-
-    drawTopicAndTags();
-    drawTeleprompterBurnIn();
-    drawScrollingTicker(ctx, canvas, topicInput.value || '', deltaTime);
-
-    if (recorder && recorder.state === 'recording'){
-      ctx.save();
-      ctx.fillStyle = 'rgba(255,45,85,1)';
-      ctx.beginPath();
-      ctx.arc(24, 24, 10, 0, Math.PI*2);
-      ctx.fill();
-      ctx.restore();
-    }
-  }
-
-  function startDrawingLoop(){
-    const loop = (ts) => {
-      drawFrame(ts);
-      rafId = requestAnimationFrame(loop);
-    };
-    rafId = requestAnimationFrame(loop);
-  }
-  function stopDrawingLoop(){
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = null;
-  }
-
-  async function startRecording(){
-    if (!stream) return;
-
-    if (!livePreview.videoWidth){
-      await new Promise(r => livePreview.onloadedmetadata = () => r());
-    }
-    fitCanvasToVideo();
-
-    tickerX = canvas.width + 20;
-    lastFrameTs = 0;
-
-    if (tpEnabled){
-      setTpText();
-      applyTpUI();
-      if (!tpPlaying) tpResetScroll();
-      if (tpScrollY === 0) tpResetScroll();
-    }
-
-    await runCountdown();
-
-    startDrawingLoop();
-
-    const canvasStream = canvas.captureStream(30);
-    const audioTracks = stream.getAudioTracks();
-    const mixed = new MediaStream([...canvasStream.getVideoTracks(), ...audioTracks]);
-
-    chunks = [];
-    recordedBlob = null;
-
-    const mimeType = bestMimeType();
-    recorder = new MediaRecorder(mixed, mimeType ? { mimeType } : undefined);
-
-    recorder.ondataavailable = (e) => { if (e.data && e.data.size>0) chunks.push(e.data); };
-
-    recorder.onstop = () => {
-      stopDrawingLoop();
-      stopRecTimer();
-      setRecordingUI(false);
-
-      recordedBlob = new Blob(chunks, { type: recorder.mimeType || 'video/webm' });
-
-      btnDownload.disabled = false;
-      btnSaveToFeed.disabled = false;
-
-      const mb = (recordedBlob.size/(1024*1024)).toFixed(2);
-      showToast(`✅ Clip pronto (${mb} MB). Premi <b>Salva nel feed</b> o <b>Download</b>.`);
-    };
-
-    recorder.start(250);
-    setRecordingUI(true);
-    btnDownload.disabled = true;
-    btnSaveToFeed.disabled = true;
-    startRecTimer();
-  }
-
-  function stopRecording(){
-    if (recorder && recorder.state === 'recording'){
-      recorder.stop();
-    }
-  }
-
-  function downloadRecorded(){
-    if (!recordedBlob) return;
-    const raw = (topicInput.value || '').trim();
-    const topic = raw.replace(/#[\s\S]*$/,'').trim() || 'video';
-    downloadBlob(recordedBlob, topic);
-    showToast(`⬇️ Download avviato.`);
-  }
-
-  // ---------------- Thumbnail from blob ----------------
-  async function makeThumbnailPng(videoBlob){
-    return new Promise((resolve) => {
-      const v = document.createElement('video');
-      v.playsInline = true;
-      v.muted = true;
-      v.preload = 'metadata';
-
-      const url = URL.createObjectURL(videoBlob);
-      v.src = url;
-
-      const clean = () => {
-        URL.revokeObjectURL(url);
-        v.src = '';
-      };
-
-      v.onloadeddata = async () => {
-        try{
-          const c = document.createElement('canvas');
-          const w = v.videoWidth || 360;
-          const h = v.videoHeight || 640;
-          c.width = Math.min(w, 360);
-          c.height = Math.round(c.width * (h / w));
-          const cctx = c.getContext('2d');
-          cctx.drawImage(v, 0, 0, c.width, c.height);
-          c.toBlob((b) => {
-            clean();
-            resolve(b || null);
-          }, 'image/png', 0.92);
-        }catch{
-          clean();
-          resolve(null);
-        }
-      };
-
-      v.onerror = () => { clean(); resolve(null); };
-    });
-  }
-
-  // ---------------- Save to DB ----------------
-  async function saveClipToDB({ blob, topic, hashtags }){
-    const id = (crypto.randomUUID ? crypto.randomUUID() : (String(Date.now()) + Math.random().toString(16).slice(2)));
-    const createdAt = nowIso();
-    const mime = blob.type || 'video/webm';
-
-    showToast(`💾 Salvataggio…`, 1200);
-
-    const thumbBlob = await makeThumbnailPng(blob);
-
-    const clip = {
-      id,
-      createdAt,
-      topic,
-      hashtags,
-      mime,
-      blob,
-      thumbBlob: thumbBlob || null
-    };
-
-    await dbPutClip(clip);
-    clips.unshift(clip);
-    renderFeed();
-    feed.scrollTo({ top: 0, behavior: 'smooth' });
-    showToast(`📌 Video importato nel feed (persistente).`);
-  }
-
-  async function saveToFeed(){
-    if (!recordedBlob) return;
-
-    const raw = (topicInput.value || '').trim();
-    const topic = raw.replace(/#[\s\S]*$/,'').trim() || 'Senza titolo';
-    const hashtags = parseHashtags(raw);
-
-    try{
-      await saveClipToDB({ blob: recordedBlob, topic, hashtags });
-      closeRecorder();
-
-      recordedBlob = null;
-      btnDownload.disabled = true;
-      btnSaveToFeed.disabled = true;
-    }catch(err){
-      console.error(err);
-      showToast(`⚠️ Errore salvataggio (spazio pieno?).`);
-    }
-  }
-
-  // ✅ UPLOAD HANDLER
-  function baseName(filename){
-    const name = (filename || 'video').replace(/\.[^.]+$/,'');
-    return name || 'video';
-  }
-
-  btnUpload.addEventListener('click', () => {
-    uploadInput.click();
-  });
-
-  uploadInput.addEventListener('change', async () => {
-    const file = uploadInput.files && uploadInput.files[0];
-    uploadInput.value = '';
-    if (!file) return;
-
-    if (!file.type.startsWith('video/')){
-      showToast(`⚠️ Seleziona un file video.`);
-      return;
-    }
-
-    // Nota: alcuni browser/OS possono dare mp4. Va bene: salviamo il blob.
-    const topic = baseName(file.name);
-    const hashtags = []; // se vuoi: estrai hashtag dal nome file (dimmi e lo faccio)
-
-    try{
-      await saveClipToDB({ blob: file, topic, hashtags });
-    }catch(err){
-      console.error(err);
-      showToast(`⚠️ Upload fallito. Forse il file è troppo grande o lo spazio è pieno.`);
-    }
-  });
-
-  // ---------------- UI EVENTS ----------------
-  btnOpenRec.addEventListener('click', openRecorder);
-  btnBack.addEventListener('click', () => closeRecorder());
-
-  btnStartCam.addEventListener('click', startCamera);
-  btnFlip.addEventListener('click', async () => {
-    facingMode = (facingMode === 'user') ? 'environment' : 'user';
-    await startCamera();
-  });
-
-  btnMirrorPreview.addEventListener('click', () => {
-    mirrorPreview = !mirrorPreview;
-    livePreview.classList.toggle('mirrorPreview', mirrorPreview);
-    btnMirrorPreview.textContent = `Mirror preview: ${mirrorPreview ? 'ON' : 'OFF'}`;
-    btnMirrorPreview.style.borderColor = mirrorPreview ? '#ff2d55' : 'rgba(255,255,255,.18)';
-    btnMirrorPreview.style.background = mirrorPreview ? 'rgba(255,45,85,.18)' : 'rgba(0,0,0,.22)';
-  });
-
-  btnTeleprompter.addEventListener('click', () => {
-    tpEnabled = !tpEnabled;
-    if (tpEnabled){
-      setTpText();
-      applyTpUI();
-      tpResetScroll();
-      tpPlaying = true;
-      showToast(`📝 Teleprompter ON`, 1200);
-    } else {
-      tpPanel.classList.remove('show');
-      tpOverlay.classList.remove('show');
-      tpPlaying = false;
-      showToast(`📝 Teleprompter OFF`, 1200);
-    }
-    applyTpUI();
-  });
-
-  btnCountdownToggle.addEventListener('click', () => {
-    isCountdownOn = !isCountdownOn;
-    btnCountdownToggle.textContent = `Countdown: ${isCountdownOn ? 'ON' : 'OFF'}`;
-    btnCountdownToggle.style.borderColor = isCountdownOn ? '#ff2d55' : 'rgba(255,255,255,.18)';
-    btnCountdownToggle.style.background = isCountdownOn ? 'rgba(255,45,85,.18)' : 'rgba(0,0,0,.22)';
-  });
-
-  btnMax15.addEventListener('click', () => { maxSeconds = 15; setMaxButtons(); showToast(`⏱️ Max durata: 15s`, 1200); });
-  btnMax30.addEventListener('click', () => { maxSeconds = 30; setMaxButtons(); showToast(`⏱️ Max durata: 30s`, 1200); });
-  btnMax60.addEventListener('click', () => { maxSeconds = 60; setMaxButtons(); showToast(`⏱️ Max durata: 60s`, 1200); });
-
-  btnRecord.addEventListener('click', startRecording);
-  btnStop.addEventListener('click', stopRecording);
-  btnDownload.addEventListener('click', downloadRecorded);
-  btnSaveToFeed.addEventListener('click', saveToFeed);
-
-  // keyboard shortcuts (desktop)
-  window.addEventListener('keydown', (e) => {
-    const k = e.key.toLowerCase();
-    if (k === 'r' && !btnRecord.disabled) startRecording();
-    if (k === 's' && !btnStop.disabled) stopRecording();
-    if (k === 't') btnTeleprompter.click();
-  });
-
-  // ---------------- REC TIMER ----------------
-  function startRecTimer(){
-    recStartTs = Date.now();
-    recTimeEl.textContent = '00:00';
-    if (recTimerId) clearInterval(recTimerId);
-    recTimerId = setInterval(() => {
-      const sec = Math.floor((Date.now() - recStartTs)/1000);
-      recTimeEl.textContent = fmtTime(sec);
-      if (sec >= maxSeconds) stopRecording();
-    }, 200);
-  }
-  function stopRecTimer(){
-    if (recTimerId) clearInterval(recTimerId);
-    recTimerId = null;
-  }
-  function setRecordingUI(isRec){
-    btnRecord.disabled = isRec;
-    btnStop.disabled = !isRec;
-    btnFlip.disabled = isRec;
-    btnStartCam.disabled = isRec;
-    btnBack.disabled = isRec;
-
-    if (isRec){
-      recBadge.style.display = 'inline-flex';
-    } else {
-      recBadge.style.display = 'none';
-      recTimeEl.textContent = '00:00';
-    }
-  }
-
-  // ---------------- INIT ----------------
-  syncOverlays();
-  setMaxButtons();
-
-  (async () => {
-    try{
-      clips = await dbGetAllClips();
-      clips.sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-      renderFeed();
-      showToast(`✅ Caricati ${clips.length} clip (IndexedDB).`, 1800);
-    }catch(err){
-      console.error(err);
-      showToast(`⚠️ IndexedDB non disponibile in questo browser.`);
-    }
-  })();
-
-  setTimeout(() => {
-    showToast(`Ticker: scrivi "TIPO · MQ · ZONA · € PREZZO" nel campo 🎯. Scorre in basso ed entra nel video.`, 5200);
-  }, 900);
-
-})();
-</script>
-</body>
-</html>
+    const fontSize =
